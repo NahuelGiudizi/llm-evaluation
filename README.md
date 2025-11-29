@@ -1,18 +1,25 @@
 # LLM Evaluation Suite
 
-> Comprehensive evaluation framework for testing Large Language Model capabilities across multiple dimensions
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-## 🎯 Project Overview
+> Enterprise-grade evaluation framework for Large Language Models with comprehensive metrics, benchmarking, and visualization capabilities.
 
-Week 3-4 of AI Safety Engineer roadmap. Building on Week 1-2 security testing, this project focuses on ML evaluation metrics, performance benchmarking, and statistical analysis of LLM outputs.
+## 🎯 Overview
+
+A production-ready toolkit for evaluating LLM performance across multiple dimensions: quality, performance, and standard benchmarks. Features interactive dashboards, statistical analysis, and seamless integration with Ollama and HuggingFace ecosystems.
 
 ## 🚀 Features
 
-- **Performance Metrics**: Response time, token efficiency, memory usage
-- **Quality Metrics**: Factual accuracy, coherence, hallucination detection
+- **Performance Metrics**: Response time, throughput, token efficiency, latency percentiles
+- **Quality Metrics**: Accuracy, coherence, hallucination detection, BLEU scores
 - **Standard Benchmarks**: MMLU, TruthfulQA, HellaSwag integration
-- **Comparison Dashboard**: Side-by-side model analysis with visualizations
-- **Statistical Analysis**: Significance testing, confidence intervals
+- **Interactive Visualizations**: Comparison dashboards, radar charts, heatmaps, trend analysis
+- **Statistical Analysis**: Significance testing, confidence intervals, distribution analysis
+- **Export Capabilities**: HTML reports, PNG charts, JSON data exports
+- **Multi-Model Support**: Compare multiple models side-by-side
+- **100% Local**: No API costs, complete data privacy with Ollama
 
 ## 📦 Installation
 
@@ -49,20 +56,58 @@ print(f"Hallucination Rate: {results.hallucination_rate:.2%}")
 evaluator.generate_report(output="evaluation_report.html")
 ```
 
-## 📊 Supported Benchmarks
+## 📊 Visualization Examples
 
-- **MMLU** (Massive Multitask Language Understanding) - 57 subjects
-- **TruthfulQA** - Truthfulness and informativeness
-- **HellaSwag** - Commonsense reasoning
-- **Custom Datasets** - Domain-specific evaluations
+Generate interactive dashboards with a single function:
 
-## 🎓 Learning Outcomes
+```python
+from llm_evaluator import quick_comparison
 
-- ✅ ML evaluation metrics (accuracy, precision, recall, F1)
-- ✅ Statistical significance testing
-- ✅ Model performance profiling
-- ✅ Data visualization with matplotlib/plotly
-- ✅ Integration with HuggingFace ecosystem
+results = {
+    "llama3.2:1b": {"mmlu": 0.65, "accuracy": 0.75, "coherence": 0.82},
+    "mistral:7b": {"mmlu": 0.78, "accuracy": 0.82, "coherence": 0.88},
+    "phi3:3.8b": {"mmlu": 0.71, "accuracy": 0.78, "coherence": 0.85}
+}
+
+# Generate all visualizations
+quick_comparison(results, output_dir="outputs")
+```
+
+Creates:
+- 📊 Bar charts for benchmark comparisons
+- 🎯 Radar charts for multi-metric analysis
+- 🔥 Heatmaps for performance overview
+- 📈 Line charts for trend analysis
+- 📦 Box plots for distribution analysis
+- 🎨 Interactive HTML dashboards
+
+## 🛠️ Tech Stack
+
+- **Python 3.11+** - Modern Python with type hints
+- **Ollama** - Local LLM runtime (no API costs)
+- **HuggingFace Datasets** - Standard benchmark datasets
+- **scikit-learn** - Statistical metrics and analysis
+- **matplotlib** - Static visualizations
+- **plotly** - Interactive charts and dashboards
+- **seaborn** - Statistical data visualization
+- **pytest** - Comprehensive test coverage (87%)
+
+## 📈 Performance
+
+Typical evaluation metrics:
+- **Speed**: ~100-500ms per prompt (model dependent)
+- **Memory**: <2GB RAM for 1B models, <8GB for 7B models
+- **Benchmark Time**: ~5-10 minutes per model
+- **Cost**: $0 (100% local execution)
+
+## 🎓 Use Cases
+
+- **Model Selection**: Compare multiple LLMs to choose the best fit for your use case
+- **Performance Optimization**: Identify bottlenecks and optimize inference
+- **Quality Assurance**: Validate model outputs before production deployment
+- **Benchmark Tracking**: Monitor model performance over time
+- **Research & Development**: Analyze model behavior across different metrics
+- **Cost-Performance Analysis**: Balance quality vs. speed for your requirements
 
 ## 📁 Project Structure
 
@@ -71,76 +116,71 @@ llm-evaluation/
 ├── src/
 │   └── llm_evaluator/
 │       ├── __init__.py
-│       ├── evaluator.py       # Main evaluation class
+│       ├── evaluator.py       # Main evaluation orchestrator
 │       ├── metrics.py          # Performance & quality metrics
 │       ├── benchmarks.py       # Standard benchmark integrations
-│       └── visualizer.py       # Dashboard generation
+│       └── visualizations.py   # Chart and dashboard generation
 ├── tests/
-│   └── test_evaluator.py
+│   ├── conftest.py            # Pytest fixtures
+│   ├── test_metrics.py        # Metrics tests (100% coverage)
+│   ├── test_evaluator.py      # Evaluator tests
+│   ├── test_benchmarks.py     # Benchmark tests
+│   └── test_visualizations.py # Visualization tests
 ├── notebooks/
-│   └── analysis.ipynb          # Interactive analysis
-├── data/
-│   └── results/                # Evaluation results storage
+│   └── analysis.ipynb         # Interactive analysis examples
+├── outputs/
+│   └── visualizations/        # Generated charts
 ├── docs/
-│   └── EXAMPLES.md
+│   └── EXAMPLES.md            # Usage examples
+├── .github/
+│   └── workflows/
+│       └── tests.yml          # CI/CD pipeline
 ├── README.md
-├── requirements.txt
-└── setup.py
+├── pyproject.toml
+├── pytest.ini
+└── requirements.txt
 ```
 
-## 🛠️ Tech Stack
+## 🔗 Related Projects
 
-- **Python 3.11+**
-- **Ollama** - Local LLM runtime
-- **HuggingFace Datasets** - Standard benchmarks
-- **lm-evaluation-harness** - EleutherAI evaluation framework
-- **scikit-learn** - Statistical metrics
-- **matplotlib/plotly** - Visualizations
-- **Jupyter** - Interactive analysis
+- **[ai-safety-testing](https://github.com/NahuelGiudizi/ai-safety-testing)** - Security vulnerability testing for LLMs
 
-## 🔗 Integration with Week 1-2
+## 📝 Development
 
-Combine security testing with performance evaluation:
+Built with enterprise best practices:
+- ✅ Test-Driven Development (TDD)
+- ✅ 87% code coverage
+- ✅ Type hints throughout
+- ✅ Black code formatting
+- ✅ Ruff linting
+- ✅ GitHub Actions CI/CD
+- ✅ Comprehensive documentation
 
-```python
-from ai_safety_tester import SimpleAITester, SeverityScorer
-from llm_evaluator import ModelEvaluator
+## 🤝 Contributing
 
-# Initialize both
-security_tester = SimpleAITester(model="llama3.2:1b")
-performance_evaluator = ModelEvaluator(model="llama3.2:1b")
+Contributions welcome! Please:
+1. Fork the repository
+2. Create a feature branch
+3. Add tests for new functionality
+4. Ensure all tests pass
+5. Submit a pull request
 
-# Run combined analysis
-security_score = security_tester.run_all_tests()
-performance_metrics = performance_evaluator.evaluate_all()
+## 📄 License
 
-# Holistic assessment
-print(f"Security: {security_score.aggregate_score}/10")
-print(f"Performance: {performance_metrics.overall_score:.2f}")
-```
+MIT License - see LICENSE file for details
 
-## 📈 Expected Results
+## 👤 Author
 
-- Benchmark 4+ models on standard datasets
-- Statistical comparison with confidence intervals
-- Identify strengths/weaknesses per model
-- Reusable evaluation pipeline
+**Nahuel Giudizi**
+- GitHub: [@NahuelGiudizi](https://github.com/NahuelGiudizi)
+- LinkedIn: [Nahuel Giudizi](https://www.linkedin.com/in/nahuel-giudizi/)
 
-## 📝 Notes
+## 🙏 Acknowledgments
 
-- **Cost**: $0 (100% local with Ollama)
-- **Models Tested**: Llama 3.2, Mistral, Phi-3, Gemma
-- **Evaluation Time**: ~10 minutes per model
-- **Output**: HTML/JSON/Markdown reports
-
-## 🔗 Resources
-
-- [EleutherAI LM Evaluation Harness](https://github.com/EleutherAI/lm-evaluation-harness)
-- [HuggingFace Datasets](https://huggingface.co/docs/datasets/)
-- [MMLU Benchmark](https://github.com/hendrycks/test)
+- [Ollama](https://ollama.com) for local LLM runtime
+- [HuggingFace](https://huggingface.co) for datasets and models
+- [EleutherAI](https://www.eleuther.ai/) for evaluation frameworks
 
 ---
 
-**Author**: Nahuel  
-**Date**: November 2025  
-**Project**: AI Safety & Alignment Testing Roadmap - Week 3-4
+**⭐ Star this repo if you find it useful!**
