@@ -42,9 +42,22 @@ pip install -e .
 
 ```python
 from llm_evaluator import ModelEvaluator
+from llm_evaluator.providers.ollama_provider import OllamaProvider
+from llm_evaluator.providers import GenerationConfig
 
-# Initialize evaluator
-evaluator = ModelEvaluator(model="llama3.2:1b")
+# Configure generation settings
+config = GenerationConfig(
+    temperature=0.7,
+    max_tokens=500,
+    timeout_seconds=30,
+    retry_attempts=3
+)
+
+# Initialize provider with dependency injection
+provider = OllamaProvider(model="llama3.2:1b", config=config)
+
+# Create evaluator with provider
+evaluator = ModelEvaluator(provider=provider)
 
 # Run comprehensive evaluation
 results = evaluator.evaluate_all()
@@ -55,8 +68,18 @@ print(f"Avg Response Time: {results.avg_response_time:.2f}s")
 print(f"Hallucination Rate: {results.hallucination_rate:.2%}")
 
 # Generate report
-evaluator.generate_report(output="evaluation_report.html")
+evaluator.generate_report(results, output="evaluation_report.md")
 ```
+
+### 🏗️ Architecture Features
+
+**Clean Architecture with Dependency Injection:**
+- 🔌 **Provider Interface** - Swap LLM backends easily (Ollama, OpenAI, Anthropic)
+- 🔄 **Retry Logic** - Exponential backoff with configurable attempts
+- 🛡️ **Error Handling** - Comprehensive exception hierarchy
+- 📝 **Logging** - Structured logging throughout
+- 🎯 **Type Safety** - Strong typing with dataclasses (no `Dict[str, Any]`)
+- ✅ **SOLID Principles** - Dependency Inversion, Single Responsibility
 
 ## 📊 Visualization Examples
 
