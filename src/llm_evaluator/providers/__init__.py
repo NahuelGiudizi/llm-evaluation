@@ -6,7 +6,7 @@ enabling clean architecture and easy swapping of LLM backends.
 """
 
 from abc import ABC, abstractmethod
-from typing import Dict, Optional, List
+from typing import Dict, Optional, List, Union
 from dataclasses import dataclass
 from enum import Enum
 
@@ -32,12 +32,12 @@ class GenerationConfig:
 
 @dataclass
 class GenerationResult:
-    """Result from LLM generation"""
+    """Result from LLM generation with strict typing (no Any)"""
     text: str
     response_time: float
     token_count: int
     model_name: str
-    metadata: Dict[str, any]
+    metadata: Dict[str, Union[str, int, float, bool]]  # Strict typing
 
 
 @dataclass
@@ -142,12 +142,12 @@ class LLMProvider(ABC):
         pass
     
     @abstractmethod
-    def get_model_info(self) -> Dict[str, any]:
+    def get_model_info(self) -> Dict[str, Union[str, int, float]]:
         """
         Get information about the model
         
         Returns:
-            Dictionary with model metadata (size, context length, etc.)
+            Dictionary with model metadata (size, context, etc.) - strictly typed
         """
         pass
     

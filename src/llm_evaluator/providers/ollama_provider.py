@@ -6,7 +6,7 @@ Concrete implementation of LLMProvider for Ollama local models.
 
 import time
 import logging
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 import ollama
 
@@ -220,12 +220,12 @@ class OllamaProvider(LLMProvider):
             logger.debug(f"Ollama not available: {e}")
             return False
     
-    def get_model_info(self) -> Dict[str, any]:
+    def get_model_info(self) -> Dict[str, Union[str, int, float]]:
         """
         Get Ollama model information
         
         Returns:
-            Dictionary with model metadata
+            Dictionary with model metadata (strictly typed)
         """
         try:
             client = self._get_client()
