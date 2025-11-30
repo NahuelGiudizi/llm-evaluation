@@ -176,7 +176,7 @@ def compare_models(
 def generate_markdown_report(results: Dict[str, Any], output_file: Path) -> None:
     """Generate a markdown comparison report"""
     
-    with open(output_file, 'w') as f:
+    with open(output_file, 'w', encoding='utf-8') as f:
         f.write("# LLM Model Comparison Report\n\n")
         f.write(f"**Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
         
@@ -251,19 +251,24 @@ def main():
     
     print("\nThis tool compares multiple models side-by-side.")
     print("Choose models to compare (separate with commas):")
-    print("\nPopular models:")
-    print("  • llama3.2:1b (fast, 1.3GB)")
-    print("  • phi3:3.8b (balanced, 2.3GB)")
-    print("  • mistral:7b (powerful, 4.1GB)")
-    print("  • gemma:2b (efficient, 1.6GB)")
+    print("\nUltra-fast models (< 1GB):")
+    print("  • qwen2.5:0.5b (316MB, fastest)")
+    print("  • tinyllama:1.1b (637MB, very fast)")
+    print("\nFast models (1-3GB):")
+    print("  • llama3.2:1b (1.3GB)")
+    print("  • gemma2:2b (1.6GB)")
+    print("  • phi3.5:3.8b (2.3GB)")
+    print("\nPowerful models (4-8GB):")
+    print("  • mistral:7b (4.1GB)")
+    print("  • llama3.2:3b (2GB)")
     
     # Get user input
-    model_input = input("\n📝 Models (e.g., llama3.2:1b,mistral:7b): ").strip()
+    model_input = input("\n📝 Models (e.g., qwen2.5:0.5b,tinyllama:1.1b): ").strip()
     if not model_input:
-        print("❌ No models specified. Exiting.")
-        return
-    
-    models = [m.strip() for m in model_input.split(',')]
+        print("❌ No models specified. Using default: qwen2.5:0.5b,tinyllama:1.1b")
+        models = ["qwen2.5:0.5b", "tinyllama:1.1b"]
+    else:
+        models = [m.strip() for m in model_input.split(',')]
     
     # Ask about dataset mode
     if DATASETS_AVAILABLE:
