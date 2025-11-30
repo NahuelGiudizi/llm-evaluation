@@ -6,13 +6,16 @@ Refactored with Clean Architecture:
 - Added error handling
 - Proper logging
 - Real dataset integration via HuggingFace datasets
+- Progress bars with ETA for long-running benchmarks
 """
 
 import logging
 import random
+import time
 from typing import Dict, Optional, List
 from functools import lru_cache
 
+from tqdm import tqdm
 from .providers import LLMProvider, ProviderError
 
 logger = logging.getLogger(__name__)
@@ -179,11 +182,18 @@ class BenchmarkRunner:
                 logger.info(f"Testing all {total_questions} questions (this will take a while...)")
             
             correct = 0
+            start_time = time.time()
             
-            for i, item in enumerate(questions_to_test):
-                if i % 100 == 0 and i > 0:
-                    logger.info(f"Progress: {i}/{len(questions_to_test)} questions processed")
-                
+            # Progress bar with ETA
+            pbar = tqdm(
+                questions_to_test,
+                desc="📚 MMLU Progress",
+                unit="question",
+                ncols=100,
+                bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}] Acc: {postfix}'
+            )
+            
+            for i, item in enumerate(pbar):
                 # MMLU format: question, choices (list), answer (index)
                 question = item['question']
                 choices = item['choices']
@@ -201,16 +211,27 @@ class BenchmarkRunner:
                 correct_letter = chr(65 + correct_answer_idx)
                 if correct_letter in response[:5] or correct_answer.lower() in result.text.lower():
                     correct += 1
+                
+                # Update progress bar with current accuracy
+                current_acc = (correct / (i + 1)) * 100
+                pbar.set_postfix_str(f"{current_acc:.1f}%")
             
+            pbar.close()
             accuracy = correct / len(questions_to_test)
+            elapsed_time = time.time() - start_time
             
-            logger.info(f"MMLU FULL: {correct}/{len(questions_to_test)} correct ({accuracy:.1%})")
+            pbar.close()
+            accuracy = correct / len(questions_to_test)
+            elapsed_time = time.time() - start_time
+            
+            logger.info(f"MMLU FULL: {correct}/{len(questions_to_test)} correct ({accuracy:.1%}) in {elapsed_time:.1f}s")
             
             return {
                 "mmlu_accuracy": accuracy,
                 "questions_tested": len(questions_to_test),
                 "correct": correct,
                 "total_available": total_questions,
+                "elapsed_time": elapsed_time,
                 "mode": "full" if not self.sample_size else f"sample_{self.sample_size}",
             }
         except Exception as e:
@@ -312,11 +333,18 @@ class BenchmarkRunner:
                 logger.info(f"Testing all {total_questions} questions")
             
             correct = 0
+            start_time = time.time()
             
-            for i, item in enumerate(questions_to_test):
-                if i % 50 == 0 and i > 0:
-                    logger.info(f"Progress: {i}/{len(questions_to_test)} questions processed")
-                
+            # Progress bar with ETA
+            pbar = tqdm(
+                questions_to_test,
+                desc="🎯 TruthfulQA Progress",
+                unit="question",
+                ncols=100,
+                bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}] Score: {postfix}'
+            )
+            
+            for i, item in enumerate(pbar):
                 question = item['question']
                 best_answer = item['best_answer']
                 correct_answers = item.get('correct_answers', [best_answer])
@@ -333,16 +361,27 @@ class BenchmarkRunner:
                 
                 if is_correct and not has_incorrect:
                     correct += 1
+                
+                # Update progress bar with current score
+                current_score = (correct / (i + 1)) * 100
+                pbar.set_postfix_str(f"{current_score:.1f}%")
             
+            pbar.close()
             truthfulness = correct / len(questions_to_test)
+            elapsed_time = time.time() - start_time
             
-            logger.info(f"TruthfulQA FULL: {correct}/{len(questions_to_test)} correct ({truthfulness:.1%})")
+            pbar.close()
+            truthfulness = correct / len(questions_to_test)
+            elapsed_time = time.time() - start_time
+            
+            logger.info(f"TruthfulQA FULL: {correct}/{len(questions_to_test)} correct ({truthfulness:.1%}) in {elapsed_time:.1f}s")
             
             return {
                 "truthfulness_score": truthfulness,
                 "questions_tested": len(questions_to_test),
                 "correct": correct,
                 "total_available": total_questions,
+                "elapsed_time": elapsed_time,
                 "mode": "full" if not self.sample_size else f"sample_{self.sample_size}",
             }
         except Exception as e:
@@ -433,11 +472,18 @@ class BenchmarkRunner:
                 logger.info(f"Testing all {total_scenarios} scenarios (this will take a while...)")
             
             correct = 0
+            start_time = time.time()
             
-            for i, item in enumerate(scenarios_to_test):
-                if i % 100 == 0 and i > 0:
-                    logger.info(f"Progress: {i}/{len(scenarios_to_test)} scenarios processed")
-                
+            # Progress bar with ETA
+            pbar = tqdm(
+                scenarios_to_test,
+                desc="🧠 HellaSwag Progress",
+                unit="scenario",
+                ncols=100,
+                bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}] Acc: {postfix}'
+            )
+            
+            for i, item in enumerate(pbar):
                 # HellaSwag format: ctx (context), endings (list of 4), label (correct index)
                 context = item['ctx']
                 endings = item['endings']
@@ -454,16 +500,27 @@ class BenchmarkRunner:
                 correct_letter = chr(65 + correct_idx)
                 if correct_letter in response[:10]:
                     correct += 1
+                
+                # Update progress bar with current accuracy
+                current_acc = (correct / (i + 1)) * 100
+                pbar.set_postfix_str(f"{current_acc:.1f}%")
             
+            pbar.close()
             accuracy = correct / len(scenarios_to_test)
+            elapsed_time = time.time() - start_time
             
-            logger.info(f"HellaSwag FULL: {correct}/{len(scenarios_to_test)} correct ({accuracy:.1%})")
+            pbar.close()
+            accuracy = correct / len(scenarios_to_test)
+            elapsed_time = time.time() - start_time
+            
+            logger.info(f"HellaSwag FULL: {correct}/{len(scenarios_to_test)} correct ({accuracy:.1%}) in {elapsed_time:.1f}s")
             
             return {
                 "hellaswag_accuracy": accuracy,
-                "questions_tested": len(scenarios_to_test),
+                "scenarios_tested": len(scenarios_to_test),
                 "correct": correct,
                 "total_available": total_scenarios,
+                "elapsed_time": elapsed_time,
                 "mode": "full" if not self.sample_size else f"sample_{self.sample_size}",
             }
         except Exception as e:
