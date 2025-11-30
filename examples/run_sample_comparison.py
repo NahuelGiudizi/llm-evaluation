@@ -84,8 +84,12 @@ def main():
     
     # Convert to format expected by quick_comparison
     comparison_results = {}
+    detailed_results = {}
+    
     for model, data in results.items():
         comparison_results[model] = data["basic"]
+        # Store full EvaluationResults object for detailed info
+        detailed_results[model] = data["basic"]
         # Add benchmark scores to detailed_metrics
         comparison_results[model].detailed_metrics.benchmarks = {
             "mmlu": data["mmlu"]["mmlu_accuracy"],
@@ -93,7 +97,7 @@ def main():
             "hellaswag": data["hellaswag"]["hellaswag_accuracy"],
         }
     
-    quick_comparison(comparison_results, output_dir=str(output_dir))
+    quick_comparison(comparison_results, output_dir=str(output_dir), detailed_results=detailed_results)
     
     print("\n" + "=" * 80)
     print("  ✅ COMPARISON COMPLETE!")
