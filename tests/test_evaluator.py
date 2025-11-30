@@ -144,6 +144,6 @@ class TestModelEvaluator:
         evaluator.generate_report(results, output=str(report_path))
 
         assert report_path.exists()
-        content = report_path.read_text()
+        content = report_path.read_text(encoding='utf-8')
         assert "test-model" in content
         assert "Overall Score" in content
