@@ -129,9 +129,9 @@ jobs:
 
       - name: Run CLI quick benchmark
         run: |
-          llm-eval quick llama3.2:1b --provider ollama
+          llm-eval quick llama3.2:1b --provider ollama --samples 5
         continue-on-error: true
-        timeout-minutes: 15
+        timeout-minutes: 5
 
       - name: Upload benchmark results
         if: always()

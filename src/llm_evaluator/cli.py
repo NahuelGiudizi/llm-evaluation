@@ -342,16 +342,23 @@ def providers():
     type=click.Choice(["ollama", "openai", "anthropic", "huggingface"]),
     help="Provider type",
 )
-def quick_benchmark(model: str, provider: str):
+@click.option(
+    "--samples",
+    "-n",
+    default=10,
+    help="Number of samples per benchmark (default: 10 for fast CI, use 100+ for production)",
+)
+def quick_benchmark(model: str, provider: str, samples: int):
     """
-    Quick benchmark with sensible defaults (100 questions, ~5 minutes)
+    Quick benchmark with configurable sample size
 
     Examples:
-        llm-eval quick llama3.2:1b
-        llm-eval quick gpt-3.5-turbo -p openai
-        llm-eval quick mistral:7b
+        llm-eval quick llama3.2:1b                    # 10 samples (fast, ~1 min)
+        llm-eval quick llama3.2:1b -n 50              # 50 samples (~5 min)
+        llm-eval quick gpt-3.5-turbo -p openai -n 100 # 100 samples (~10 min)
     """
     click.echo(f"\n🚀 Quick Benchmark: {model} ({provider})")
+    click.echo(f"📊 Samples per benchmark: {samples}")
     click.echo("=" * 50)
 
     # Create provider
@@ -363,19 +370,19 @@ def quick_benchmark(model: str, provider: str):
 
     click.echo(f"✅ {model} is ready!\n")
 
-    # Run with sensible defaults: real data, 100 samples
-    runner = BenchmarkRunner(provider=llm_provider, use_full_datasets=True, sample_size=100)
+    # Run with configurable sample size
+    runner = BenchmarkRunner(provider=llm_provider, use_full_datasets=True, sample_size=samples)
 
     results = {}
 
     # Run each benchmark
-    click.echo("📚 Running MMLU (100 questions)...")
+    click.echo(f"📚 Running MMLU ({samples} questions)...")
     results["mmlu"] = runner.run_mmlu_sample()
 
-    click.echo("📖 Running TruthfulQA (100 questions)...")
+    click.echo(f"📖 Running TruthfulQA ({samples} questions)...")
     results["truthfulqa"] = runner.run_truthfulqa_sample()
 
-    click.echo("🧠 Running HellaSwag (100 questions)...")
+    click.echo(f"🧠 Running HellaSwag ({samples} questions)...")
     results["hellaswag"] = runner.run_hellaswag_sample()
 
     # Print results
