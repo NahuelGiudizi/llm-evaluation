@@ -4,7 +4,7 @@
   <img src="https://img.shields.io/pypi/v/llm-benchmark-toolkit?style=for-the-badge&color=blue" alt="PyPI">
   <img src="https://img.shields.io/pypi/dm/llm-benchmark-toolkit?style=for-the-badge&color=green" alt="Downloads">
   <img src="https://img.shields.io/github/stars/NahuelGiudizi/llm-evaluation?style=for-the-badge" alt="Stars">
-  <img src="https://img.shields.io/badge/coverage-80%25-brightgreen?style=for-the-badge" alt="Coverage">
+  <img src="https://img.shields.io/badge/coverage-79%25-brightgreen?style=for-the-badge" alt="Coverage">
   <img src="https://img.shields.io/badge/python-3.11+-blue?style=for-the-badge" alt="Python">
   <img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge" alt="License">
 </p>
@@ -28,10 +28,31 @@
 ### Install
 
 ```bash
+# Recommended: Full installation with dashboard and all providers
+pip install llm-benchmark-toolkit[full]
+
+# Or minimal CLI only
 pip install llm-benchmark-toolkit
 ```
 
-### Quick Evaluation
+### 🌐 Web Dashboard (Recommended!)
+
+The easiest way to evaluate models - a beautiful web interface:
+
+```bash
+# Launch the dashboard
+llm-eval dashboard
+```
+
+Opens your browser to `http://localhost:8888` where you can:
+
+- 🚀 **Run evaluations** with real-time progress tracking
+- 📊 **Compare models** with interactive charts
+- 🔍 **Inspect scenarios** - see every question & answer
+- 📈 **View history** - track improvements over time
+- 💾 **Export results** - JSON, charts, reports
+
+### Quick CLI Evaluation
 
 ```bash
 # Auto-detects provider from environment

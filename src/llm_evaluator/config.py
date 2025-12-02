@@ -70,8 +70,8 @@ class EvaluatorConfig(BaseSettings):
 
     # Output Settings
     output_dir: Path = Field(
-        default=Path("outputs"),
-        description="Default output directory for reports and visualizations",
+        default=Path.home() / ".llm-benchmark" / "outputs",
+        description="Default output directory for reports and results",
     )
 
     # Environment

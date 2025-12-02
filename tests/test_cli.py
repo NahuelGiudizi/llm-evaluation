@@ -116,7 +116,22 @@ class TestCreateProvider:
 
             provider = create_provider("llama3.2:1b", "ollama", cache=False)
 
-            mock_provider.assert_called_once_with(model="llama3.2:1b")
+            mock_provider.assert_called_once_with(model="llama3.2:1b", base_url=None)
+            assert provider == mock_instance
+
+    def test_create_ollama_provider_with_base_url(self):
+        """Test creating Ollama provider with custom base URL"""
+        with patch("llm_evaluator.cli.OllamaProvider") as mock_provider:
+            mock_instance = Mock()
+            mock_provider.return_value = mock_instance
+
+            provider = create_provider(
+                "llama3.2:1b", "ollama", cache=False, base_url="http://localhost:8080"
+            )
+
+            mock_provider.assert_called_once_with(
+                model="llama3.2:1b", base_url="http://localhost:8080"
+            )
             assert provider == mock_instance
 
     def test_create_provider_with_cache(self):

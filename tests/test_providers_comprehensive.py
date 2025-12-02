@@ -2,18 +2,32 @@
 Extended tests for API providers to improve coverage
 """
 
+import importlib.util
 from unittest.mock import Mock
+
+import pytest
+
+
+# Check if optional dependencies are available
+def has_anthropic():
+    return importlib.util.find_spec("anthropic") is not None
+
+
+def has_openai():
+    return importlib.util.find_spec("openai") is not None
 
 
 class TestAnthropicProviderImports:
     """Test Anthropic provider import paths"""
 
+    @pytest.mark.skipif(not has_anthropic(), reason="anthropic package not installed")
     def test_anthropic_provider_module_exists(self):
         """Test that anthropic_provider module can be imported"""
         from llm_evaluator.providers import anthropic_provider
 
         assert anthropic_provider is not None
 
+    @pytest.mark.skipif(not has_anthropic(), reason="anthropic package not installed")
     def test_anthropic_provider_class_exists(self):
         """Test that AnthropicProvider class exists"""
         from llm_evaluator.providers.anthropic_provider import AnthropicProvider
@@ -24,12 +38,14 @@ class TestAnthropicProviderImports:
 class TestOpenAIProviderImports:
     """Test OpenAI provider import paths"""
 
+    @pytest.mark.skipif(not has_openai(), reason="openai package not installed")
     def test_openai_provider_module_exists(self):
         """Test that openai_provider module can be imported"""
         from llm_evaluator.providers import openai_provider
 
         assert openai_provider is not None
 
+    @pytest.mark.skipif(not has_openai(), reason="openai package not installed")
     def test_openai_provider_class_exists(self):
         """Test that OpenAIProvider class exists"""
         from llm_evaluator.providers.openai_provider import OpenAIProvider
@@ -56,12 +72,18 @@ class TestHuggingFaceProviderImports:
 class TestDeepSeekProviderImports:
     """Test DeepSeek provider import paths"""
 
+    @pytest.mark.skipif(
+        not has_openai(), reason="openai package not installed (DeepSeek uses OpenAI client)"
+    )
     def test_deepseek_provider_module_exists(self):
         """Test that deepseek_provider module can be imported"""
         from llm_evaluator.providers import deepseek_provider
 
         assert deepseek_provider is not None
 
+    @pytest.mark.skipif(
+        not has_openai(), reason="openai package not installed (DeepSeek uses OpenAI client)"
+    )
     def test_deepseek_provider_class_exists(self):
         """Test that DeepSeekProvider class exists"""
         from llm_evaluator.providers.deepseek_provider import DeepSeekProvider

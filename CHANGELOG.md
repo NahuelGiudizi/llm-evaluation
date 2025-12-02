@@ -5,11 +5,38 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2025-12-02
+
+### Added
+
+- **Comprehensive Test Suite**
+  - Added 100+ new tests across all modules
+  - Test coverage increased to 79%
+  - New test files for benchmarks, CLI, config, providers
+
+- **Code Quality Improvements**
+  - All code now passes `isort`, `black`, `ruff`, and `mypy` checks
+  - Fixed type annotations throughout codebase
+  - Improved import organization
+
+### Changed
+
+- Updated coverage configuration to exclude optional provider modules
+- Improved benchmark demo modes for better testability
+
+### Fixed
+
+- Type annotation issues in dashboard and CLI modules
+- Import sorting issues across all source files
+
+---
+
 ## [2.0.0] - 2025-01-XX
 
 ### Added
 
 #### Academic Evaluation Features
+
 - **Statistical Metrics Module** (`statistical_metrics.py`)
   - Wilson score confidence intervals for accurate proportions
   - Bootstrap confidence intervals for complex metrics
@@ -48,11 +75,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `examples/academic_evaluation.py` - Full working example
 
 ### Changed
+
 - All benchmark functions now return confidence intervals (`confidence_interval_95`, `standard_error`, `ci_width`)
 - Updated README with academic features section
 - Version bumped to 2.0.0
 
 ### Fixed
+
 - Improved type safety throughout codebase
 
 ---
@@ -60,14 +89,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.4.1] - 2025-01-XX
 
 ### Fixed
+
 - Provider signature compatibility issues
 - Test stability improvements
 
 ## [0.4.0] - 2025-01-XX
 
 ### Added
+
 - Initial PyPI release as `llm-benchmark-toolkit`
-- MMLU, TruthfulQA, HellaSwag benchmarks
+- , TruthfulQA, HellaSwag benchmarks
 - Ollama, OpenAI, Anthropic, HuggingFace providers
 - CLI tool with `quick`, `run`, `compare`, `benchmark` commands
 - Intelligent caching with `CachedProvider`
@@ -76,6 +107,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.3.0] - 2025-01-XX
 
 ### Added
+
 - HuggingFace provider
 - Visualization module
 - Markdown report generation
@@ -83,12 +115,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.2.0] - 2025-01-XX
 
 ### Added
+
 - OpenAI and Anthropic providers
 - Full benchmark datasets from HuggingFace
 
 ## [0.1.0] - 2025-01-XX
 
 ### Added
+
 - Initial release
 - Basic ModelEvaluator class
 - Ollama provider

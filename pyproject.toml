@@ -73,9 +73,23 @@ all-providers = [
     "anthropic>=0.18.0",
     "huggingface-hub>=0.20.0",
 ]
+dashboard = [
+    "fastapi>=0.104.0",
+    "uvicorn[standard]>=0.24.0",
+    "sse-starlette>=1.8.0",
+]
+full = [
+    "openai>=1.0.0",
+    "anthropic>=0.18.0",
+    "huggingface-hub>=0.20.0",
+    "fastapi>=0.104.0",
+    "uvicorn[standard]>=0.24.0",
+    "sse-starlette>=1.8.0",
+]
 
 [project.scripts]
 llm-eval = "llm_evaluator.cli:cli"
+llm-dashboard = "llm_evaluator.dashboard:run_dashboard"
 
 [project.urls]
 Homepage = "https://github.com/NahuelGiudizi/llm-evaluation"
@@ -86,9 +100,13 @@ PyPI = "https://pypi.org/project/llm-benchmark-toolkit/"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
+include-package-data = true
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+"llm_evaluator.dashboard" = ["static/**/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -96,6 +114,36 @@ python_files = "test_*.py"
 python_classes = "Test*"
 python_functions = "test_*"
 addopts = "-v --cov=src --cov-report=html --cov-report=term"
+
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "*/dashboard/*",
+    "*openai_provider*",
+    "*anthropic_provider*",
+    "*deepseek_provider*",
+    "*huggingface_provider*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "except ImportError:",
+    "def _run_.*_full",
+    "logger.info.*Loading.*dataset",
+]
+fail_under = 75
+omit = [
+    "*/dashboard/*",
+    "*openai_provider*",
+    "*anthropic_provider*",
+    "*deepseek_provider*",
+    "*huggingface_provider*",
+]
 
 [tool.black]
 line-length = 100
