@@ -28,12 +28,11 @@
 ### Install
 
 ```bash
-# Recommended: Full installation with dashboard and all providers
-pip install llm-benchmark-toolkit[full]
-
-# Or minimal CLI only
+# Full installation (dashboard + all providers)
 pip install llm-benchmark-toolkit
 ```
+
+That's it! Everything included: Dashboard, OpenAI, Anthropic, Ollama, HuggingFace.
 
 ### 🌐 Web Dashboard (Recommended!)
 

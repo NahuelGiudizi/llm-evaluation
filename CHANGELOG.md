@@ -5,9 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.1.0] - 2025-12-02
+## [2.2.0] - 2025-12-02
 
 ### Added
+
+- **Interactive Web Dashboard**
+  - Real-time evaluation progress monitoring
+  - Model comparison charts (bar & radar)
+  - Queue system for batch evaluations
+  - Export to JSON, CSV, LaTeX, BibTeX
+  - Scenario viewer with detailed Q&A inspection
 
 - **Comprehensive Test Suite**
   - Added 100+ new tests across all modules

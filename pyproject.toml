@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "llm-benchmark-toolkit"
-version = "2.1.0"
+version = "2.2.0"
 description = "Production-ready LLM evaluation with 24K+ real questions"
 readme = "README.md"
 authors = [
@@ -27,6 +27,7 @@ keywords = [
 ]
 requires-python = ">=3.11"
 dependencies = [
+    # Core
     "ollama>=0.1.0",
     "datasets>=2.14.0",
     "scikit-learn>=1.3.0",
@@ -41,6 +42,14 @@ dependencies = [
     "pydantic-settings>=2.0.0",
     "psutil>=5.9.0",
     "tqdm>=4.66.0",
+    # Dashboard (included by default)
+    "fastapi>=0.104.0",
+    "uvicorn[standard]>=0.24.0",
+    "sse-starlette>=1.8.0",
+    # Cloud providers (included by default)
+    "openai>=1.0.0",
+    "anthropic>=0.18.0",
+    "huggingface-hub>=0.20.0",
 ]
 
 [project.optional-dependencies]
