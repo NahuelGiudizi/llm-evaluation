@@ -4,26 +4,35 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "llm-benchmark-toolkit"
-version = "2.2.0"
-description = "Production-ready LLM evaluation with 24K+ real questions"
+version = "2.2.1"
+description = "Benchmark LLMs with real academic datasets: MMLU, TruthfulQA, HellaSwag, ARC & more. Web dashboard included."
 readme = "README.md"
 authors = [
-    {name = "Nahuel Giudizi", email = "nahuel@example.com"}
+    {name = "Nahuel Giudizi", email = "nahuelgiudizi@hotmail.com"}
 ]
 license = "MIT"
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
+    "Intended Audience :: Education",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Testing",
+    "Framework :: FastAPI",
+    "Environment :: Web Environment",
+    "Natural Language :: English",
+    "Natural Language :: Spanish",
 ]
 keywords = [
-    "llm", "evaluation", "benchmark", "mmlu", "truthfulqa",
-    "hellaswag", "gpt", "claude", "ollama", "academic"
+    "llm", "evaluation", "benchmark", "mmlu", "truthfulqa", "hellaswag",
+    "arc", "winogrande", "commonsenseqa", "boolq", "safetybench",
+    "gpt", "gpt-4", "claude", "ollama", "openai", "anthropic",
+    "ai", "machine-learning", "deep-learning", "nlp", "language-model",
+    "dashboard", "academic", "research", "testing", "metrics"
 ]
 requires-python = ">=3.11"
 dependencies = [
