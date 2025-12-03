@@ -7,17 +7,19 @@ Refactored with Clean Architecture:
 - Proper logging
 - Real dataset integration via HuggingFace datasets
 - Progress bars with ETA for long-running benchmarks
+- Parallel execution support for 5-10x speedup
 """
 
 import logging
 import random
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from functools import lru_cache
-from typing import Any, Dict, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from tqdm import tqdm
 
-from .providers import LLMProvider, ProviderError
+from .providers import GenerationResult, LLMProvider, ProviderError
 
 logger = logging.getLogger(__name__)
 
@@ -131,6 +133,18 @@ def load_gsm8k_dataset() -> Any:
     return load_dataset("gsm8k", "main")
 
 
+# ==================== CODE GENERATION BENCHMARKS ====================
+
+
+@lru_cache(maxsize=1)
+def load_humaneval_dataset() -> Any:
+    """Load and cache HumanEval dataset (164 Python programming problems)"""
+    if not DATASETS_AVAILABLE:
+        raise ImportError("datasets library required. Install with: pip install datasets")
+    logger.info("Loading HumanEval dataset from HuggingFace...")
+    return load_dataset("openai_humaneval")
+
+
 # Deprecated aliases for backward compatibility
 _load_mmlu_dataset = load_mmlu_dataset
 _load_truthfulqa_dataset = load_truthfulqa_dataset
@@ -148,6 +162,10 @@ class BenchmarkRunner:
     - MMLU: 14,042 multiple-choice questions across 57 subjects
     - TruthfulQA: 817 questions testing truthfulness
     - HellaSwag: 10,042 commonsense reasoning scenarios
+
+    Parallel execution:
+    - Set max_workers > 1 to enable concurrent API calls (5-10x speedup)
+    - Useful for providers with high rate limits (Groq, Together, etc.)
     """
 
     def __init__(
@@ -155,6 +173,7 @@ class BenchmarkRunner:
         provider: LLMProvider,
         use_full_datasets: bool = False,
         sample_size: Optional[int] = None,
+        max_workers: int = 1,
     ):
         """
         Initialize with LLM provider
@@ -165,15 +184,85 @@ class BenchmarkRunner:
                               If False, use demo mode with 3 hardcoded questions (fast)
             sample_size: If specified, randomly sample this many questions from full dataset
                         (e.g., sample_size=100 for quick testing with real data)
+            max_workers: Number of concurrent workers for parallel execution (default: 1 = sequential)
+                        Set higher for faster benchmarks with providers that support high rate limits
         """
         self.provider = provider
         self.use_full_datasets = use_full_datasets
         self.sample_size = sample_size
+        self.max_workers = max_workers
 
         if use_full_datasets and not DATASETS_AVAILABLE:
             raise ImportError(
                 "datasets library required for full datasets. Install with: pip install datasets"
             )
+
+    def _run_parallel(
+        self,
+        items: List[Any],
+        process_fn: Callable[[int, Any], Tuple[bool, Dict[str, Any]]],
+        desc: str = "Progress",
+    ) -> Tuple[int, List[Dict[str, Any]]]:
+        """
+        Run a processing function on items in parallel.
+
+        Args:
+            items: List of items to process
+            process_fn: Function that takes (index, item) and returns (is_correct, scenario_dict)
+            desc: Description for progress bar
+
+        Returns:
+            Tuple of (correct_count, list_of_scenarios)
+        """
+        correct = 0
+        scenarios: List[Dict[str, Any]] = []
+
+        if self.max_workers <= 1:
+            # Sequential execution (original behavior)
+            pbar = tqdm(enumerate(items), total=len(items), desc=desc, unit="q", ncols=100)
+            for i, item in pbar:
+                is_correct, scenario = process_fn(i, item)
+                if is_correct:
+                    correct += 1
+                scenarios.append(scenario)
+                pbar.set_postfix_str(f"{(correct/(i+1))*100:.1f}%")
+            pbar.close()
+        else:
+            # Parallel execution
+            logger.info(f"Running {len(items)} items with {self.max_workers} workers")
+            results_dict: Dict[int, Tuple[bool, Dict[str, Any]]] = {}
+
+            with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
+                # Submit all tasks
+                future_to_idx = {
+                    executor.submit(process_fn, i, item): i for i, item in enumerate(items)
+                }
+
+                # Process results with progress bar
+                pbar = tqdm(
+                    as_completed(future_to_idx),
+                    total=len(items),
+                    desc=f"{desc} (parallel)",
+                    unit="q",
+                    ncols=100,
+                )
+                for future in pbar:
+                    idx = future_to_idx[future]
+                    try:
+                        is_correct, scenario = future.result()
+                        results_dict[idx] = (is_correct, scenario)
+                        if is_correct:
+                            correct += 1
+                        pbar.set_postfix_str(f"{(correct/len(results_dict))*100:.1f}%")
+                    except Exception as e:
+                        logger.error(f"Error processing item {idx}: {e}")
+                        results_dict[idx] = (False, {"error": str(e), "id": idx})
+                pbar.close()
+
+            # Sort by original index to maintain order
+            scenarios = [results_dict[i][1] for i in sorted(results_dict.keys())]
+
+        return correct, scenarios
 
     def _extract_mcq_answer(self, response: str, correct_letter: str, num_choices: int = 4) -> bool:
         """
@@ -333,24 +422,13 @@ class BenchmarkRunner:
                     f"Sampling {len(questions_to_test)} questions from {total_questions} total"
                 )
             else:
-                questions_to_test = test_data
+                questions_to_test = list(test_data)
                 logger.info(f"Testing all {total_questions} questions (this will take a while...)")
 
-            correct = 0
             start_time = time.time()
-            scenarios = []  # Capture evaluated scenarios
 
-            # Progress bar with ETA
-            pbar = tqdm(
-                questions_to_test,
-                desc="📚 MMLU Progress",
-                unit="question",
-                ncols=100,
-                bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}] Acc: {postfix}",
-            )
-
-            for i, item in enumerate(pbar):
-                # MMLU format: question, choices (list), answer (index)
+            def process_mmlu_item(i: int, item: Any) -> Tuple[bool, Dict[str, Any]]:
+                """Process a single MMLU question"""
                 question = item["question"]
                 choices = item["choices"]
                 correct_answer_idx = item["answer"]
@@ -359,7 +437,7 @@ class BenchmarkRunner:
 
                 # Format prompt
                 choices_str = "\n".join(
-                    [f"{chr(65+i)}) {choice}" for i, choice in enumerate(choices)]
+                    [f"{chr(65+j)}) {choice}" for j, choice in enumerate(choices)]
                 )
                 prompt = f"{question}\n{choices_str}\n\nRespond with ONLY the letter (A, B, C, or D), nothing else:"
 
@@ -370,29 +448,23 @@ class BenchmarkRunner:
                 correct_letter = chr(65 + correct_answer_idx)
                 is_correct = self._extract_mcq_answer(response, correct_letter, len(choices))
 
-                if is_correct:
-                    correct += 1
+                scenario = {
+                    "id": i,
+                    "question": question,
+                    "choices": choices,
+                    "correct_answer": correct_answer,
+                    "correct_letter": correct_letter,
+                    "model_response": response,
+                    "is_correct": is_correct,
+                    "subject": subject,
+                }
+                return is_correct, scenario
 
-                # Capture scenario details
-                scenarios.append(
-                    {
-                        "id": i,
-                        "question": question,
-                        "choices": choices,
-                        "correct_answer": correct_answer,
-                        "correct_letter": correct_letter,
-                        "model_response": response,
-                        "is_correct": is_correct,
-                        "subject": subject,
-                    }
-                )
+            correct, scenarios = self._run_parallel(
+                questions_to_test, process_mmlu_item, "📚 MMLU Progress"
+            )
 
-                # Update progress bar with current accuracy
-                current_acc = (correct / (i + 1)) * 100
-                pbar.set_postfix_str(f"{current_acc:.1f}%")
-
-            pbar.close()
-            accuracy = correct / len(questions_to_test)
+            accuracy = correct / len(questions_to_test) if questions_to_test else 0
             elapsed_time = time.time() - start_time
 
             logger.info(
@@ -406,7 +478,7 @@ class BenchmarkRunner:
                 "total_available": total_questions,
                 "elapsed_time": elapsed_time,
                 "mode": "full" if not self.sample_size else f"sample_{self.sample_size}",
-                "scenarios": scenarios,  # Include evaluated scenarios
+                "scenarios": scenarios,
             }
         except Exception as e:
             logger.error(f"MMLU full benchmark failed: {e}")

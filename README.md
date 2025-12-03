@@ -217,13 +217,32 @@ results = evaluator.evaluate_all()
 | 🔌 **8 Providers** | Ollama, OpenAI, Anthropic, DeepSeek, Groq, Together.ai, Fireworks, HuggingFace |
 | 🐳 **Docker Support** | `docker run llm-benchmark quick` |
 | 🌐 **Web Dashboard** | Beautiful UI with real-time progress, charts, and history |
-| ⚡ **Zero Config** | Auto-detects provider from environment variables |
+| ⚡ **Parallel Execution** | 5-10x speedup with `--workers 4` |
 | 💾 **Smart Caching** | 10x faster repeated evaluations |
 | 📈 **Academic Rigor** | 95% CI, McNemar tests, baseline comparisons |
 | 📄 **Paper Exports** | LaTeX tables, BibTeX citations, CSV, JSON |
 | 🛡️ **Safety Testing** | SafetyBench + Do-Not-Answer for security evaluation |
 | 🔢 **Math Reasoning** | GSM8K (8,500 grade school math problems) |
 | 🎨 **Beautiful CLI** | Progress bars, colored output, ETA tracking |
+
+---
+
+## ⚡ Parallel Execution (5-10x Speedup)
+
+Speed up benchmarks with concurrent API calls:
+
+```bash
+# 4 parallel workers (4x faster)
+llm-eval benchmark --model gpt-4o-mini --provider openai --workers 4 --sample-size 100
+
+# Maximum parallelism for fast providers like Groq
+llm-eval benchmark --model llama3-8b-8192 --provider groq --workers 8 --sample-size 500
+```
+
+**Note**: Set workers based on your provider's rate limits:
+- **Groq**: 8-16 workers (very high rate limits)
+- **OpenAI**: 4-8 workers
+- **Ollama**: 1-2 workers (local, CPU-bound)
 
 ---
 

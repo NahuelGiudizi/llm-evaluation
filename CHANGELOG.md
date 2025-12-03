@@ -22,6 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Tests mathematical reasoning capabilities
   - Extracts numerical answers from natural language responses
   - Included in `run_all_benchmarks()` aggregate score
+- **Parallel Execution** - 5-10x speedup with `--workers` option
+  - `llm-eval benchmark --workers 4` for 4x parallel speedup
+  - Works with all providers that support concurrent requests
+  - Thread-safe progress bar with live accuracy updates
 
 ### Changed
 

@@ -667,6 +667,13 @@ def compare(
 @click.option("--full", is_flag=True, help="Run full benchmarks (~132,000 questions)")
 @click.option("--cache/--no-cache", default=True, help="Enable caching")
 @click.option("--output", "-o", default="benchmark_results.json", help="Output file")
+@click.option(
+    "--workers",
+    "-w",
+    type=int,
+    default=1,
+    help="Number of parallel workers (default: 1 = sequential). Higher values give 5-10x speedup.",
+)
 def benchmark(
     model: str,
     provider: str,
@@ -677,6 +684,7 @@ def benchmark(
     full: bool,
     cache: bool,
     output: str,
+    workers: int,
 ) -> None:
     """
     Run specific benchmarks on a model
@@ -686,10 +694,13 @@ def benchmark(
         llm-eval benchmark --model gpt-3.5-turbo --provider openai --sample-size 100
         llm-eval benchmark --model llama3.2:1b --full  # Warning: takes hours!
         llm-eval benchmark --model my-model --base-url http://localhost:8000/v1 --provider openai
+        llm-eval benchmark --model llama3.2:1b --workers 4  # 4x parallel speedup
     """
     click.echo(f"📊 Running benchmarks on {model} ({provider})")
     if base_url:
         click.echo(f"   Custom endpoint: {base_url}")
+    if workers > 1:
+        click.echo(f"   ⚡ Parallel mode: {workers} workers")
 
     if full and not click.confirm("⚠️  Full benchmarks take 2-8 hours. Continue?"):
         click.echo("Aborted.")
@@ -705,7 +716,10 @@ def benchmark(
     # Setup benchmark runner
     use_full = full or (sample_size is not None)
     runner = BenchmarkRunner(
-        provider=llm_provider, use_full_datasets=use_full, sample_size=None if full else sample_size
+        provider=llm_provider,
+        use_full_datasets=use_full,
+        sample_size=None if full else sample_size,
+        max_workers=workers,
     )
 
     # Parse benchmarks

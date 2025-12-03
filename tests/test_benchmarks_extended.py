@@ -430,3 +430,85 @@ class TestGSM8KBenchmark:
 
         assert result["correct"] == 0
         assert result["gsm8k_accuracy"] == 0.0
+
+
+class TestParallelExecution:
+    """Test parallel execution functionality"""
+
+    @pytest.fixture
+    def mock_provider(self):
+        """Create a mock provider"""
+        provider = Mock()
+        provider.model = "test-model"
+        provider.config = GenerationConfig()
+        provider.generate.return_value = GenerationResult(
+            text="A",
+            response_time=0.1,
+            tokens_used=10,
+            model="test-model",
+            metadata={},
+        )
+        return provider
+
+    def test_init_with_max_workers(self, mock_provider):
+        """Test initialization with max_workers parameter"""
+        runner = BenchmarkRunner(mock_provider, max_workers=4)
+        assert runner.max_workers == 4
+
+    def test_default_sequential_execution(self, mock_provider):
+        """Test default is sequential (max_workers=1)"""
+        runner = BenchmarkRunner(mock_provider)
+        assert runner.max_workers == 1
+
+    def test_run_parallel_sequential_mode(self, mock_provider):
+        """Test _run_parallel works in sequential mode"""
+        runner = BenchmarkRunner(mock_provider, max_workers=1)
+
+        items = [{"value": i} for i in range(3)]
+
+        def process_fn(idx, item):
+            return True, {"id": idx, "value": item["value"]}
+
+        correct, scenarios = runner._run_parallel(items, process_fn, "Test")
+
+        assert correct == 3
+        assert len(scenarios) == 3
+        assert scenarios[0]["id"] == 0
+        assert scenarios[1]["id"] == 1
+        assert scenarios[2]["id"] == 2
+
+    def test_run_parallel_parallel_mode(self, mock_provider):
+        """Test _run_parallel works in parallel mode"""
+        runner = BenchmarkRunner(mock_provider, max_workers=2)
+
+        items = [{"value": i} for i in range(5)]
+
+        def process_fn(idx, item):
+            return idx % 2 == 0, {"id": idx, "value": item["value"]}
+
+        correct, scenarios = runner._run_parallel(items, process_fn, "Test")
+
+        # 0, 2, 4 are correct (3 items)
+        assert correct == 3
+        assert len(scenarios) == 5
+        # Results should be in original order
+        for i, scenario in enumerate(scenarios):
+            assert scenario["id"] == i
+
+    def test_parallel_handles_errors(self, mock_provider):
+        """Test parallel execution handles errors gracefully"""
+        runner = BenchmarkRunner(mock_provider, max_workers=2)
+
+        items = [{"value": i} for i in range(3)]
+
+        def process_fn(idx, item):
+            if idx == 1:
+                raise ValueError("Test error")
+            return True, {"id": idx}
+
+        correct, scenarios = runner._run_parallel(items, process_fn, "Test")
+
+        # Only 2 should be correct (0 and 2 succeed, 1 fails)
+        assert correct == 2
+        assert len(scenarios) == 3
+        assert "error" in scenarios[1]
