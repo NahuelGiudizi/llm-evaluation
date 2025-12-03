@@ -1,0 +1,76 @@
+# Ignore Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Ignore distribution/packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Ignore virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Ignore IDE settings
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Ignore test and coverage
+.tox/
+.nox/
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+.hypothesis/
+
+# Ignore Jupyter
+.ipynb_checkpoints/
+
+# Ignore local config
+*.local
+.env.local
+
+# Ignore documentation build
+docs/_build/
+
+# Ignore logs
+*.log
+
+# Ignore git
+.git/
+.gitignore
+
+# Ignore Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Ignore CI/CD
+.github/
+
+# Ignore development files
+tests/
+*.md
+!README.md
+Makefile

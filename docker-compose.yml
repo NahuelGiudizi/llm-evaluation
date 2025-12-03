@@ -1,0 +1,77 @@
+# LLM Benchmark Toolkit - Docker Compose Configuration
+# Easily run benchmarks with environment variables
+
+services:
+  # ============================================
+  # Main benchmark service
+  # ============================================
+  benchmark:
+    build: .
+    image: llm-benchmark:latest
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
+      - TOGETHER_API_KEY=${TOGETHER_API_KEY:-}
+      - FIREWORKS_API_KEY=${FIREWORKS_API_KEY:-}
+      - HF_TOKEN=${HF_TOKEN:-}
+    volumes:
+      - ./outputs:/app/outputs
+      - ./data:/app/data
+    command: ["--help"]
+
+  # ============================================
+  # Dashboard service (web UI)
+  # ============================================
+  dashboard:
+    build: .
+    image: llm-benchmark:latest
+    ports:
+      - "8888:8888"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
+      - TOGETHER_API_KEY=${TOGETHER_API_KEY:-}
+      - FIREWORKS_API_KEY=${FIREWORKS_API_KEY:-}
+      - HF_TOKEN=${HF_TOKEN:-}
+    volumes:
+      - ./outputs:/app/outputs
+      - ./data:/app/data
+    command: ["dashboard", "--host", "0.0.0.0", "--port", "8888"]
+
+  # ============================================
+  # Quick evaluation service
+  # ============================================
+  quick:
+    build: .
+    image: llm-benchmark:latest
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
+    volumes:
+      - ./outputs:/app/outputs
+    command: ["quick"]
+
+# ============================================
+# Usage:
+# ============================================
+#
+# Create .env file with your API keys:
+#   OPENAI_API_KEY=sk-...
+#   GROQ_API_KEY=gsk_...
+#
+# Run quick evaluation:
+#   docker compose run quick
+#
+# Start dashboard:
+#   docker compose up dashboard
+#   # Open http://localhost:8888
+#
+# Run custom benchmark:
+#   docker compose run benchmark benchmark --model gpt-4o-mini --benchmarks mmlu -s 50
+#
+# Build image:
+#   docker compose build

@@ -150,7 +150,8 @@ llm-eval academic --model llama3.2:1b \
 ```bash
 # Common options for most commands
 -m, --model TEXT       # Model name
--p, --provider TYPE    # ollama, openai, anthropic, huggingface, deepseek
+-p, --provider TYPE    # ollama, openai, anthropic, huggingface, deepseek,
+                       # groq, together, fireworks
 -s, --sample-size INT  # Number of questions to test
 -u, --base-url URL     # Custom API endpoint (vLLM, LM Studio, Azure)
 --cache / --no-cache   # Enable/disable caching
@@ -173,6 +174,9 @@ llm-eval vs llama3.2:1b mistral:7b -b mmlu,arc -s 50
 
 # Compare models from different providers
 llm-eval vs gpt-4o-mini claude-3.5-sonnet -p openai,anthropic
+
+# Ultra-fast with Groq
+llm-eval quick --model llama-3.1-8b-instant --provider groq
 ```
 
 ---
@@ -210,7 +214,8 @@ results = evaluator.evaluate_all()
 |---------|-------------|
 | 📊 **9 Benchmarks** | MMLU, TruthfulQA, HellaSwag, ARC, WinoGrande, CommonsenseQA, BoolQ, SafetyBench, Do-Not-Answer |
 | 🔢 **100,000+ Questions** | Real academic datasets from HuggingFace |
-| 🔌 **5 Providers** | Ollama, OpenAI, Anthropic, DeepSeek, HuggingFace |
+| 🔌 **8 Providers** | Ollama, OpenAI, Anthropic, DeepSeek, Groq, Together.ai, Fireworks, HuggingFace |
+| 🐳 **Docker Support** | `docker run llm-benchmark quick` |
 | 🌐 **Web Dashboard** | Beautiful UI with real-time progress, charts, and history |
 | ⚡ **Zero Config** | Auto-detects provider from environment variables |
 | 💾 **Smart Caching** | 10x faster repeated evaluations |
@@ -329,12 +334,11 @@ pytest tests/ -v
 
 ### Wanted
 
-- [ ] More providers (Cohere, AI21, Groq, Together.ai)
-- [ ] More benchmarks (GSM8K, HumanEval, GPQA, MT-Bench)
 - [ ] Async evaluation for faster throughput
+- [ ] More benchmarks (GSM8K, HumanEval, GPQA, MT-Bench)
 - [ ] Batch evaluation mode
 - [ ] Custom benchmark support
-- [ ] Docker image for easy deployment
+- [ ] Kubernetes deployment
 
 **Contributors welcome!** 🎉
 
@@ -349,6 +353,35 @@ pytest tests/ -v
 | 🔬 [Benchmarks](docs/FULL_BENCHMARKS.md) | MMLU, TruthfulQA, HellaSwag details |
 | 🎓 [Academic Usage](docs/ACADEMIC_USAGE.md) | Statistical methods, LaTeX export |
 | 📘 [API Reference](docs/API.md) | Complete Python API documentation |
+
+---
+
+## 🐳 Docker
+
+Run benchmarks without installing anything:
+
+```bash
+# Build the image
+docker build -t llm-benchmark .
+
+# Quick evaluation with OpenAI
+docker run -e OPENAI_API_KEY=$OPENAI_API_KEY llm-benchmark quick
+
+# Ultra-fast with Groq
+docker run -e GROQ_API_KEY=$GROQ_API_KEY llm-benchmark quick \
+  --model llama-3.1-8b-instant --provider groq
+
+# Run specific benchmarks
+docker run -e OPENAI_API_KEY=$OPENAI_API_KEY llm-benchmark benchmark \
+  --model gpt-4o-mini --benchmarks mmlu,truthfulqa -s 50
+
+# Launch dashboard
+docker run -p 8888:8888 -e OPENAI_API_KEY=$OPENAI_API_KEY \
+  llm-benchmark dashboard --host 0.0.0.0
+
+# With docker-compose
+docker compose up dashboard
+```
 
 ---
 
