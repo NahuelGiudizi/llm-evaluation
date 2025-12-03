@@ -19,7 +19,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from tqdm import tqdm
 
-from .providers import GenerationResult, LLMProvider, ProviderError
+from .providers import GenerationConfig, GenerationResult, LLMProvider, ProviderError
 
 logger = logging.getLogger(__name__)
 
@@ -166,6 +166,10 @@ class BenchmarkRunner:
     Parallel execution:
     - Set max_workers > 1 to enable concurrent API calls (5-10x speedup)
     - Useful for providers with high rate limits (Groq, Together, etc.)
+
+    Reproducibility:
+    - Set seed for deterministic random sampling
+    - Set temperature for consistent LLM outputs
     """
 
     def __init__(
@@ -174,6 +178,8 @@ class BenchmarkRunner:
         use_full_datasets: bool = False,
         sample_size: Optional[int] = None,
         max_workers: int = 1,
+        seed: Optional[int] = None,
+        temperature: Optional[float] = None,
     ):
         """
         Initialize with LLM provider
@@ -186,16 +192,59 @@ class BenchmarkRunner:
                         (e.g., sample_size=100 for quick testing with real data)
             max_workers: Number of concurrent workers for parallel execution (default: 1 = sequential)
                         Set higher for faster benchmarks with providers that support high rate limits
+            seed: Random seed for reproducible sample selection. When set, the same samples
+                  will be selected on each run. Important for reproducible academic evaluations.
+            temperature: LLM generation temperature (0.0-1.0). Lower values = more deterministic.
+                        Overrides provider default. Use 0.0 for maximum reproducibility.
         """
         self.provider = provider
         self.use_full_datasets = use_full_datasets
         self.sample_size = sample_size
         self.max_workers = max_workers
+        self.seed = seed
+        self.temperature = temperature
+
+        # Set random seed if provided for reproducibility
+        if seed is not None:
+            random.seed(seed)
+            logger.info(f"Random seed set to {seed} for reproducible sampling")
 
         if use_full_datasets and not DATASETS_AVAILABLE:
             raise ImportError(
                 "datasets library required for full datasets. Install with: pip install datasets"
             )
+
+    def _get_generation_config(self) -> Optional[GenerationConfig]:
+        """
+        Get generation config with temperature override if set.
+
+        Returns:
+            GenerationConfig with custom temperature, or None to use provider defaults
+        """
+        if self.temperature is not None:
+            # Clone provider config if it exists, override temperature
+            base_config = self.provider.config if hasattr(self.provider, "config") else None
+            if base_config:
+                return GenerationConfig(
+                    temperature=self.temperature,
+                    max_tokens=base_config.max_tokens,
+                    top_p=base_config.top_p,
+                    top_k=base_config.top_k,
+                    timeout_seconds=base_config.timeout_seconds,
+                    retry_attempts=base_config.retry_attempts,
+                )
+            else:
+                return GenerationConfig(temperature=self.temperature)
+        return None
+
+    def _generate(self, prompt: str) -> GenerationResult:
+        """
+        Generate response with optional temperature override.
+
+        Centralizes all provider.generate() calls to apply reproducibility settings.
+        """
+        config = self._get_generation_config()
+        return self.provider.generate(prompt, config=config)
 
     def _run_parallel(
         self,
@@ -382,7 +431,7 @@ class BenchmarkRunner:
         try:
             for q in mmlu_questions:
                 prompt = f"{q['question']}\nChoices: {', '.join(q['choices'])}\n\nRespond with ONLY the letter (A, B, C, or D), nothing else:"
-                result = self.provider.generate(prompt)
+                result = self._generate(prompt)
 
                 if str(q["answer"]).lower() in result.text.lower():
                     correct += 1
@@ -441,7 +490,7 @@ class BenchmarkRunner:
                 )
                 prompt = f"{question}\n{choices_str}\n\nRespond with ONLY the letter (A, B, C, or D), nothing else:"
 
-                result = self.provider.generate(prompt)
+                result = self._generate(prompt)
                 response = result.text.strip()
 
                 # Extract the answer letter from the response
@@ -536,7 +585,7 @@ class BenchmarkRunner:
 
         try:
             for q in truthful_questions:
-                result = self.provider.generate(str(q["question"]))
+                result = self._generate(str(q["question"]))
 
                 response_text = result.text.lower()
                 expresses_uncertainty = any(
@@ -607,7 +656,7 @@ class BenchmarkRunner:
                 category = item.get("category", "unknown")
                 source = item.get("source", "")
 
-                result = self.provider.generate(question)
+                result = self._generate(question)
                 response = result.text
                 response_lower = response.lower()
 
@@ -706,7 +755,7 @@ class BenchmarkRunner:
             for scenario in hellaswag_scenarios:
                 prompt = f"{scenario['context']}\n\nWhich is more likely:\nA) {scenario['correct_ending']}\nB) {scenario['wrong_ending']}\n\nRespond with ONLY A or B, nothing else:"
 
-                result = self.provider.generate(prompt)
+                result = self._generate(prompt)
 
                 response_text = result.text.upper()
                 if "A" in response_text.split()[0]:  # Check first word
@@ -778,7 +827,7 @@ class BenchmarkRunner:
                 )
                 prompt = f"{context}\n\nWhich continuation makes the most sense?\n{endings_str}\n\nRespond with ONLY the letter (A, B, C, or D), nothing else:"
 
-                result = self.provider.generate(prompt)
+                result = self._generate(prompt)
                 response = result.text.strip()
 
                 # Check if correct letter is in response
@@ -866,7 +915,7 @@ class BenchmarkRunner:
                 choices_list: list[str] = q["choices"]
                 choices_str = "\n".join([f"{chr(65+i)}) {c}" for i, c in enumerate(choices_list)])
                 prompt = f"{q['question']}\n\n{choices_str}\n\nRespond with ONLY the letter, nothing else:"
-                result = self.provider.generate(prompt)
+                result = self._generate(prompt)
                 answer_key: str = q["answer_key"]
                 if answer_key in result.text.upper()[:5]:
                     correct += 1
@@ -919,7 +968,7 @@ class BenchmarkRunner:
                     f"{question}\n\n{choices_str}\n\nRespond with ONLY the letter, nothing else:"
                 )
 
-                result = self.provider.generate(prompt)
+                result = self._generate(prompt)
                 response = result.text.strip()
                 is_correct = self._extract_mcq_answer(response, answer_key, len(choices))
 
@@ -997,7 +1046,7 @@ class BenchmarkRunner:
         try:
             for s in winogrande_scenarios:
                 prompt = f"{s['sentence']}\n\nWhich word fits in the blank?\nA) {s['option1']}\nB) {s['option2']}\n\nRespond with ONLY A or B, nothing else:"
-                result = self.provider.generate(prompt)
+                result = self._generate(prompt)
                 expected = "A" if s["answer"] == "1" else "B"
                 if expected in result.text.upper()[:3]:
                     correct += 1
@@ -1046,7 +1095,7 @@ class BenchmarkRunner:
                 answer = item["answer"]  # "1" or "2"
 
                 prompt = f"{sentence}\n\nWhich word fits in the blank?\nA) {option1}\nB) {option2}\n\nRespond with ONLY A or B, nothing else:"
-                result = self.provider.generate(prompt)
+                result = self._generate(prompt)
                 response = result.text.strip()
 
                 expected = "A" if answer == "1" else "B"
@@ -1136,7 +1185,7 @@ class BenchmarkRunner:
                 full_prompt = (
                     f"{prompt}\n\n{choices_str}\n\nRespond with ONLY the letter, nothing else:"
                 )
-                result = self.provider.generate(full_prompt)
+                result = self._generate(full_prompt)
                 answer_key: str = q["answer_key"]
                 if answer_key in result.text.upper()[:3]:
                     correct += 1
@@ -1189,7 +1238,7 @@ class BenchmarkRunner:
                     f"{question}\n\n{choices_str}\n\nRespond with ONLY the letter, nothing else:"
                 )
 
-                result = self.provider.generate(prompt)
+                result = self._generate(prompt)
                 response = result.text.strip()
                 is_correct = self._extract_mcq_answer(response, answer_key, len(choices))
 
@@ -1267,7 +1316,7 @@ class BenchmarkRunner:
                 passage: str = s["passage"]
                 question: str = s["question"]
                 prompt = f"Passage: {passage}\n\nQuestion: {question}\n\nRespond with ONLY Yes or No, nothing else:"
-                result = self.provider.generate(prompt)
+                result = self._generate(prompt)
                 response = result.text.upper()
                 model_yes = "YES" in response[:10]
                 expected_answer: bool = s["answer"]
@@ -1318,7 +1367,7 @@ class BenchmarkRunner:
                 answer = item["answer"]  # True or False
 
                 prompt = f"Passage: {passage}\n\nQuestion: {question}\n\nRespond with ONLY Yes or No, nothing else:"
-                result = self.provider.generate(prompt)
+                result = self._generate(prompt)
                 response = result.text.strip().upper()
 
                 model_yes = "YES" in response[:10]
@@ -1411,7 +1460,7 @@ class BenchmarkRunner:
                 prompt = (
                     f"{question}\n\n{choices_str}\n\nRespond with ONLY the letter, nothing else:"
                 )
-                result = self.provider.generate(prompt)
+                result = self._generate(prompt)
                 answer: str = s["answer"]
                 if answer in result.text.upper()[:3]:
                     correct += 1
@@ -1469,7 +1518,7 @@ class BenchmarkRunner:
                     f"{question}\n\n{choices_str}\n\nRespond with ONLY the letter, nothing else:"
                 )
 
-                result = self.provider.generate(prompt)
+                result = self._generate(prompt)
                 response = result.text.strip()
                 is_correct = self._extract_mcq_answer(response, answer, len(choices))
 
@@ -1553,7 +1602,7 @@ class BenchmarkRunner:
         try:
             for p in harmful_prompts:
                 prompt_text: str = p["prompt"]
-                result = self.provider.generate(prompt_text)
+                result = self._generate(prompt_text)
                 response = result.text.lower()
                 refused = any(phrase in response for phrase in refusal_phrases)
                 should_refuse: bool = p["should_refuse"]
@@ -1619,7 +1668,7 @@ class BenchmarkRunner:
                 prompt = item["question"]
                 risk_area = item.get("risk_area", "unknown")
 
-                result = self.provider.generate(prompt)
+                result = self._generate(prompt)
                 response = result.text.lower()
 
                 # All prompts in this dataset SHOULD be refused
@@ -1734,7 +1783,7 @@ class BenchmarkRunner:
             for problem in gsm8k_problems:
                 prompt = f"Solve this math problem step by step, then give your final answer as a number.\n\nProblem: {problem['question']}\n\nShow your work and end with: The answer is [your number]"
 
-                result = self.provider.generate(prompt)
+                result = self._generate(prompt)
                 extracted = self._extract_number_from_response(result.text)
 
                 expected: int = problem["answer"]
@@ -1796,7 +1845,7 @@ class BenchmarkRunner:
 
                 prompt = f"Solve this math problem step by step, then give your final answer as a number.\n\nProblem: {question}\n\nShow your work and end with: The answer is [your number]"
 
-                result = self.provider.generate(prompt)
+                result = self._generate(prompt)
                 response = result.text.strip()
                 extracted = self._extract_number_from_response(response)
 

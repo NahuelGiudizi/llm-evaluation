@@ -582,3 +582,149 @@ def calculate_aggregate_statistics(
         "median": float(np.median(arr)),
         "count": len(accuracies),
     }
+
+
+def power_analysis_sample_size(
+    expected_difference: float = 0.05,
+    baseline_accuracy: float = 0.75,
+    alpha: float = 0.05,
+    power: float = 0.80,
+    test_type: str = "two-sided",
+) -> Dict[str, Union[int, float, str, Dict[str, Union[float, int, str]]]]:
+    """
+    Calculate required sample size for detecting a difference in accuracy.
+
+    Uses formula for comparing two proportions (model vs baseline).
+    This is a key tool for planning rigorous evaluations.
+
+    Args:
+        expected_difference: Expected improvement over baseline (e.g., 0.05 for 5%)
+        baseline_accuracy: Known baseline accuracy (e.g., 0.75)
+        alpha: Significance level (default: 0.05)
+        power: Statistical power (default: 0.80, meaning 80% chance to detect true difference)
+        test_type: "two-sided" or "one-sided"
+
+    Returns:
+        Dict with:
+            - n_per_group: Required samples per model
+            - total_n: Total samples needed
+            - effect_size_h: Cohen's h effect size
+            - interpretation: Human-readable explanation
+            - parameters: Input parameters used
+            - recommendations: Benchmark-specific sample sizes
+
+    Example:
+        >>> result = power_analysis_sample_size(
+        ...     expected_difference=0.05,
+        ...     baseline_accuracy=0.80,
+        ...     power=0.80
+        ... )
+        >>> print(f"Need {result['n_per_group']} samples per model")
+        Need 785 samples per model
+
+    References:
+        Cohen, J. (1988). Statistical Power Analysis for the Behavioral Sciences.
+    """
+    # Validate inputs
+    if not 0 < baseline_accuracy < 1:
+        raise ValueError("baseline_accuracy must be between 0 and 1")
+    if not 0 < expected_difference < 1:
+        raise ValueError("expected_difference must be between 0 and 1")
+    if baseline_accuracy + expected_difference > 1:
+        raise ValueError("baseline + difference cannot exceed 1")
+
+    p1 = baseline_accuracy
+    p2 = baseline_accuracy + expected_difference
+
+    # Effect size (Cohen's h) - arcsine transformation
+    h = 2 * (math.asin(math.sqrt(p2)) - math.asin(math.sqrt(p1)))
+
+    # Z-scores for alpha and power
+    if test_type == "two-sided":
+        z_alpha = stats.norm.ppf(1 - alpha / 2)
+    else:
+        z_alpha = stats.norm.ppf(1 - alpha)
+    z_beta = stats.norm.ppf(power)
+
+    # Sample size formula for comparing two proportions
+    # n = 2 * ((z_alpha + z_beta) / h)^2
+    if abs(h) < 0.001:
+        n_per_group = 999999  # Very small effect, need huge sample
+    else:
+        n_per_group = math.ceil(2 * ((z_alpha + z_beta) / h) ** 2)
+
+    # Ensure minimum sensible sample size
+    n_per_group = max(n_per_group, 30)
+
+    # Interpretation
+    if n_per_group < 100:
+        difficulty = "easy to detect (small sample needed)"
+    elif n_per_group < 500:
+        difficulty = "moderate sample size needed"
+    elif n_per_group < 1000:
+        difficulty = "large sample size needed"
+    elif n_per_group < 5000:
+        difficulty = "very large sample size needed"
+    else:
+        difficulty = "extremely large sample (consider larger expected difference)"
+
+    interpretation = (
+        f"To detect a {expected_difference:.1%} improvement over {baseline_accuracy:.1%} baseline "
+        f"with {power:.0%} power at α={alpha}, you need {n_per_group:,} samples per model "
+        f"({n_per_group * 2:,} total). This is {difficulty}."
+    )
+
+    # Benchmark-specific recommendations
+    recommendations = {
+        "mmlu": {"available": 14042, "recommended": max(500, min(n_per_group, 14042))},
+        "truthfulqa": {"available": 817, "recommended": min(817, max(200, n_per_group))},
+        "hellaswag": {"available": 10042, "recommended": max(500, min(n_per_group, 10042))},
+        "gsm8k": {"available": 1319, "recommended": min(1319, max(200, n_per_group))},
+        "arc": {"available": 2590, "recommended": max(500, min(n_per_group, 2590))},
+        "winogrande": {"available": 44000, "recommended": max(500, min(n_per_group, 5000))},
+        "commonsenseqa": {"available": 12247, "recommended": max(500, min(n_per_group, 5000))},
+        "boolq": {"available": 15942, "recommended": max(500, min(n_per_group, 5000))},
+    }
+
+    return {
+        "n_per_group": n_per_group,
+        "total_n": n_per_group * 2,
+        "effect_size_h": round(h, 4),
+        "interpretation": interpretation,
+        "difficulty": difficulty,
+        "parameters": {
+            "expected_difference": expected_difference,
+            "baseline_accuracy": baseline_accuracy,
+            "alpha": alpha,
+            "power": power,
+            "test_type": test_type,
+        },
+        "recommendations": recommendations,
+    }
+
+
+def minimum_sample_size_table() -> Dict[str, Dict[str, int]]:
+    """
+    Generate a table of minimum sample sizes for common scenarios.
+
+    Returns dict mapping power_level -> {diff_2pct, diff_5pct, diff_10pct, diff_15pct}
+
+    Example:
+        >>> table = minimum_sample_size_table()
+        >>> print(table["power_80"]["diff_5pct"])
+        1092
+    """
+    results: Dict[str, Dict[str, int]] = {}
+
+    power_levels = [0.80, 0.90, 0.95]
+    differences = [0.02, 0.05, 0.10, 0.15]
+
+    for pow_val in power_levels:
+        pow_key = f"power_{int(pow_val * 100)}"
+        results[pow_key] = {}
+        for diff in differences:
+            diff_key = f"diff_{int(diff * 100)}pct"
+            result = power_analysis_sample_size(expected_difference=diff, power=pow_val)
+            results[pow_key][diff_key] = result["total_n"]  # Total samples, not per group
+
+    return results

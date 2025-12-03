@@ -72,9 +72,13 @@ except ImportError:
     HAS_FIREWORKS = False
 
 from llm_evaluator.providers.cached_provider import CachedProvider
+from llm_evaluator.statistical_metrics import (
+    power_analysis_sample_size,
+    minimum_sample_size_table,
+)
 
 # Version
-__version__ = "2.1.0"
+__version__ = "2.3.0"
 
 
 def detect_provider_from_env() -> Tuple[Optional[str], Optional[str]]:
@@ -674,6 +678,19 @@ def compare(
     default=1,
     help="Number of parallel workers (default: 1 = sequential). Higher values give 5-10x speedup.",
 )
+@click.option(
+    "--seed",
+    type=int,
+    default=None,
+    help="Random seed for reproducible sample selection. Set for reproducible evaluations.",
+)
+@click.option(
+    "--temperature",
+    "-t",
+    type=float,
+    default=None,
+    help="LLM temperature (0.0-1.0). Lower = more deterministic. Use 0.0 for reproducibility.",
+)
 def benchmark(
     model: str,
     provider: str,
@@ -685,6 +702,8 @@ def benchmark(
     cache: bool,
     output: str,
     workers: int,
+    seed: Optional[int],
+    temperature: Optional[float],
 ) -> None:
     """
     Run specific benchmarks on a model
@@ -695,12 +714,17 @@ def benchmark(
         llm-eval benchmark --model llama3.2:1b --full  # Warning: takes hours!
         llm-eval benchmark --model my-model --base-url http://localhost:8000/v1 --provider openai
         llm-eval benchmark --model llama3.2:1b --workers 4  # 4x parallel speedup
+        llm-eval benchmark --model llama3.2:1b --seed 42 --temperature 0.0  # Reproducible run
     """
     click.echo(f"📊 Running benchmarks on {model} ({provider})")
     if base_url:
         click.echo(f"   Custom endpoint: {base_url}")
     if workers > 1:
         click.echo(f"   ⚡ Parallel mode: {workers} workers")
+    if seed is not None:
+        click.echo(f"   🔢 Random seed: {seed}")
+    if temperature is not None:
+        click.echo(f"   🌡️  Temperature: {temperature}")
 
     if full and not click.confirm("⚠️  Full benchmarks take 2-8 hours. Continue?"):
         click.echo("Aborted.")
@@ -720,6 +744,8 @@ def benchmark(
         use_full_datasets=use_full,
         sample_size=None if full else sample_size,
         max_workers=workers,
+        seed=seed,
+        temperature=temperature,
     )
 
     # Parse benchmarks
@@ -921,6 +947,19 @@ def providers() -> None:
     default=True,
     help="Compare against published baselines",
 )
+@click.option(
+    "--seed",
+    type=int,
+    default=None,
+    help="Random seed for reproducible sample selection. CRITICAL for academic papers.",
+)
+@click.option(
+    "--temperature",
+    "-t",
+    type=float,
+    default=0.0,
+    help="LLM temperature (default: 0.0 for reproducibility). Use 0.0 for academic evaluations.",
+)
 def academic(
     model: str,
     provider: str,
@@ -930,6 +969,8 @@ def academic(
     output_bibtex: Optional[str],
     output_json: str,
     compare_baselines: bool,
+    seed: Optional[int],
+    temperature: float,
 ) -> None:
     """
     Run academic-quality evaluation with statistical rigor
@@ -939,14 +980,19 @@ def academic(
     - Comparison against published baselines
     - Error analysis and calibration metrics
     - LaTeX tables and BibTeX citations
+    - Reproducibility controls (seed, temperature)
 
     Examples:
         llm-eval academic --model llama3.2:1b --output-latex results.tex
         llm-eval academic --model gpt-4 --provider openai --output-bibtex citations.bib
+        llm-eval academic --model llama3.2:1b --seed 42  # Fully reproducible
     """
     click.echo(f"🎓 Running academic evaluation on {model} ({provider})")
     click.echo(f"   Sample size: {sample_size}")
     click.echo(f"   Compare baselines: {compare_baselines}")
+    if seed is not None:
+        click.echo(f"   🔢 Random seed: {seed}")
+    click.echo(f"   🌡️  Temperature: {temperature}")
 
     # Create provider
     llm_provider = create_provider(model, provider, cache)
@@ -963,6 +1009,8 @@ def academic(
     try:
         results: AcademicEvaluationResults = evaluator.evaluate_all_academic(
             sample_size=sample_size,
+            seed=seed,
+            temperature=temperature,
         )
     except Exception as e:
         click.echo(f"❌ Error during evaluation: {e}", err=True)
@@ -1655,6 +1703,169 @@ def list_runs() -> None:
     click.echo("─" * 100)
     click.echo(f"\n📁 Directory: {outputs_dir}")
     click.echo("💡 Export a run: llm-eval export <run_id>.json --format all\n")
+
+
+@cli.command()
+@click.option(
+    "--difference",
+    "-d",
+    type=float,
+    default=0.05,
+    help="Expected accuracy difference to detect (default: 0.05 = 5%%)",
+)
+@click.option(
+    "--baseline",
+    "-b",
+    type=float,
+    default=0.75,
+    help="Expected baseline accuracy (default: 0.75 = 75%%)",
+)
+@click.option(
+    "--power",
+    "-p",
+    type=float,
+    default=0.80,
+    help="Statistical power / sensitivity (default: 0.80)",
+)
+@click.option(
+    "--alpha",
+    "-a",
+    type=float,
+    default=0.05,
+    help="Significance level (default: 0.05)",
+)
+@click.option(
+    "--show-table",
+    is_flag=True,
+    help="Show reference table with common sample sizes",
+)
+def power(
+    difference: float,
+    baseline: float,
+    power: float,
+    alpha: float,
+    show_table: bool,
+) -> None:
+    """
+    📊 Power Analysis for Academic Evaluations
+
+    Calculate the minimum sample size needed to detect statistically
+    significant differences between LLM models.
+
+    This tool helps researchers determine how many test samples are
+    required for valid statistical comparisons.
+
+    Examples:
+
+        # Default: detect 5% difference at 80% power
+        llm-eval power
+
+        # Detect smaller 2% difference (needs more samples)
+        llm-eval power --difference 0.02
+
+        # Higher power requirement (90%)
+        llm-eval power --power 0.90
+
+        # Show reference table
+        llm-eval power --show-table
+    """
+    click.echo("\n" + "=" * 60)
+    click.echo("📊 POWER ANALYSIS FOR LLM EVALUATION")
+    click.echo("=" * 60)
+
+    if show_table:
+        # Show reference table
+        click.echo("\n📋 Minimum Sample Size Reference Table\n")
+        click.echo("For detecting accuracy differences at α=0.05")
+        click.echo("Baseline accuracy: 75%\n")
+
+        table = minimum_sample_size_table()
+
+        # Header
+        click.echo(f"{'Power':<12} {'2% diff':<12} {'5% diff':<12} {'10% diff':<12} {'15% diff':<12}")
+        click.echo("─" * 60)
+
+        power_labels = {
+            "power_80": "80%",
+            "power_90": "90%",
+            "power_95": "95%",
+        }
+
+        for power_key, power_label in power_labels.items():
+            row = table[power_key]
+            click.echo(
+                f"{power_label:<12} "
+                f"{row['diff_2pct']:>10,}  "
+                f"{row['diff_5pct']:>10,}  "
+                f"{row['diff_10pct']:>10,}  "
+                f"{row['diff_15pct']:>10,}"
+            )
+
+        click.echo("─" * 60)
+        click.echo("\n💡 Note: Values are TOTAL samples (split across models)")
+        click.echo("   For 2-model comparison: divide by 2 per model\n")
+        return
+
+    # Calculate power analysis
+    result = power_analysis_sample_size(
+        expected_difference=difference,
+        baseline_accuracy=baseline,
+        alpha=alpha,
+        power=power,
+    )
+
+    # Display parameters
+    click.echo("\n📐 Analysis Parameters:")
+    click.echo("─" * 40)
+    click.echo(f"  Expected difference:  {difference:.1%}")
+    click.echo(f"  Baseline accuracy:    {baseline:.1%}")
+    click.echo(f"  Significance (α):     {alpha}")
+    click.echo(f"  Power (1-β):          {power:.0%}")
+
+    # Display results
+    click.echo("\n📊 Required Sample Sizes:")
+    click.echo("─" * 40)
+    click.echo(f"  Per model:  {result['n_per_group']:,} samples")
+    click.echo(f"  Total:      {result['total_n']:,} samples")
+    click.echo(f"  Effect size (Cohen's h): {result['effect_size_h']:.3f}")
+
+    # Interpretation
+    click.echo(f"\n📝 Interpretation:")
+    click.echo("─" * 40)
+    click.echo(f"  {result['interpretation']}")
+
+    # Benchmark-specific recommendations from power analysis
+    recs = result["recommendations"]
+    n_needed = result["n_per_group"]
+
+    click.echo("\n📚 Benchmark Recommendations:")
+    click.echo("─" * 60)
+    click.echo(f"  {'Benchmark':<15} {'Available':<12} {'Recommended':<12} {'Status'}")
+    click.echo("  " + "─" * 56)
+
+    for bench_name, bench_info in recs.items():
+        available = bench_info["available"]
+        recommended = bench_info["recommended"]
+
+        if available >= n_needed:
+            status = click.style("✅ Sufficient", fg="green")
+        elif available >= n_needed * 0.5:
+            status = click.style("⚠️ Marginal", fg="yellow")
+        else:
+            status = click.style("❌ Too small", fg="red")
+
+        click.echo(
+            f"  {bench_name.upper():<15} {available:>10,}  {recommended:>10,}  {status}"
+        )
+
+    click.echo("\n💡 Tips:")
+    click.echo("─" * 40)
+    click.echo("  • Use full benchmark size when sample size allows")
+    click.echo("  • Combine multiple benchmarks for robust evaluation")
+    click.echo("  • Report confidence intervals alongside point estimates")
+    click.echo("  • Use --show-table for quick reference")
+
+    click.echo("\n" + "=" * 60 + "\n")
 
 
 if __name__ == "__main__":

@@ -19,7 +19,7 @@ class TestBenchmarkRunnerMoreDemos:
     def test_run_arc_demo(self):
         """Test ARC demo mode with correct answers"""
 
-        def mock_response(prompt):
+        def mock_response(prompt, config=None):
             response = Mock()
             if "color" in prompt:
                 response.text = "A"
@@ -39,7 +39,7 @@ class TestBenchmarkRunnerMoreDemos:
     def test_run_winogrande_demo(self):
         """Test WinoGrande demo mode"""
 
-        def mock_response(prompt):
+        def mock_response(prompt, config=None):
             response = Mock()
             response.text = "1"
             return response
@@ -55,7 +55,7 @@ class TestBenchmarkRunnerMoreDemos:
     def test_run_commonsenseqa_demo(self):
         """Test CommonsenseQA demo mode"""
 
-        def mock_response(prompt):
+        def mock_response(prompt, config=None):
             response = Mock()
             response.text = "A"
             return response
@@ -71,7 +71,7 @@ class TestBenchmarkRunnerMoreDemos:
     def test_run_boolq_demo(self):
         """Test BoolQ demo mode"""
 
-        def mock_response(prompt):
+        def mock_response(prompt, config=None):
             response = Mock()
             if "France" in prompt:
                 response.text = "yes"
@@ -90,7 +90,7 @@ class TestBenchmarkRunnerMoreDemos:
     def test_run_safetybench_demo(self):
         """Test SafetyBench demo mode"""
 
-        def mock_response(prompt):
+        def mock_response(prompt, config=None):
             response = Mock()
             response.text = "A"  # Safe option
             return response
@@ -117,7 +117,7 @@ class TestBenchmarkRunnerFullModeMocked:
         ]
         mock_load.return_value = {"test": mock_data}
 
-        def mock_response(prompt):
+        def mock_response(prompt, config=None):
             response = Mock()
             response.text = "A"
             return response
@@ -221,7 +221,7 @@ class TestBenchmarkRunnerErrorHandling:
     def test_provider_error_propagates(self):
         """Test that provider errors propagate correctly"""
 
-        def mock_response(prompt):
+        def mock_response(prompt, config=None):
             raise ProviderError("Connection failed")
 
         provider = MockProvider(model="test-model")
@@ -236,7 +236,7 @@ class TestBenchmarkRunnerErrorHandling:
         """Test run_all handles individual benchmark errors"""
         call_count = [0]
 
-        def mock_response(prompt):
+        def mock_response(prompt, config=None):
             call_count[0] += 1
             # Fail on 5th call (during second benchmark)
             if call_count[0] > 4:
@@ -260,7 +260,7 @@ class TestBenchmarkResultsFormat:
     def test_mmlu_result_structure(self):
         """Test MMLU result has all required fields"""
 
-        def mock_response(prompt):
+        def mock_response(prompt, config=None):
             response = Mock()
             response.text = "B"
             return response
@@ -281,7 +281,7 @@ class TestBenchmarkResultsFormat:
     def test_truthfulqa_result_structure(self):
         """Test TruthfulQA result has all required fields"""
 
-        def mock_response(prompt):
+        def mock_response(prompt, config=None):
             response = Mock()
             response.text = "I don't know"
             return response
@@ -300,7 +300,7 @@ class TestBenchmarkResultsFormat:
     def test_hellaswag_result_structure(self):
         """Test HellaSwag result has all required fields"""
 
-        def mock_response(prompt):
+        def mock_response(prompt, config=None):
             response = Mock()
             response.text = "A"
             return response
@@ -319,7 +319,7 @@ class TestBenchmarkResultsFormat:
     def test_aggregate_score_structure(self):
         """Test aggregate score in run_all_benchmarks"""
 
-        def mock_response(prompt):
+        def mock_response(prompt, config=None):
             response = Mock()
             response.text = "A"
             return response

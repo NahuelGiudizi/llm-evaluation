@@ -398,7 +398,7 @@ class TestGSM8KBenchmark:
         # Problem 1: Janet sells eggs at $2 each, answer is 18
         # Problem 2: Robe takes 3 bolts total
         answers = iter(["The answer is 18", "The answer is 3"])
-        provider.generate.side_effect = lambda _: GenerationResult(
+        provider.generate.side_effect = lambda prompt, config=None: GenerationResult(
             text=next(answers),
             response_time=0.1,
             tokens_used=10,

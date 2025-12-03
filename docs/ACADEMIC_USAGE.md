@@ -333,6 +333,137 @@ print(manifest)
 
 ---
 
+## Power Analysis for Sample Size Planning
+
+**New in v2.3.0:** Built-in power analysis helps researchers determine the minimum sample size needed to detect statistically significant differences between models.
+
+### Using the CLI
+
+```bash
+# Default: detect 5% difference at 80% power
+llm-eval power
+
+# Detect smaller 2% difference (needs more samples)
+llm-eval power --difference 0.02
+
+# Higher power requirement (90%)  
+llm-eval power --power 0.90
+
+# Show reference table
+llm-eval power --show-table
+```
+
+### Power Analysis API
+
+```python
+from llm_evaluator.statistical_metrics import (
+    power_analysis_sample_size,
+    minimum_sample_size_table
+)
+
+# Calculate sample size for your study
+result = power_analysis_sample_size(
+    expected_difference=0.05,  # 5% improvement to detect
+    baseline_accuracy=0.75,    # Expected baseline accuracy
+    alpha=0.05,                # Significance level
+    power=0.80                 # 80% power (standard)
+)
+
+print(f"Need {result['n_per_group']:,} samples per model")
+print(f"Total: {result['total_n']:,} samples")
+print(f"Effect size (Cohen's h): {result['effect_size_h']:.3f}")
+
+# Get benchmark recommendations
+for bench, info in result['recommendations'].items():
+    print(f"{bench}: use {info['recommended']:,} of {info['available']:,} available")
+```
+
+### Reference Table
+
+| Power | 2% diff | 5% diff | 10% diff | 15% diff |
+|-------|---------|---------|----------|----------|
+| 80%   | 14,312  | 2,184   | 496      | 194      |
+| 90%   | 19,160  | 2,924   | 664      | 258      |
+| 95%   | 23,694  | 3,616   | 820      | 320      |
+
+*Values are TOTAL samples (divide by 2 for per-model count). Based on baseline accuracy of 75%, α=0.05.*
+
+### Interpreting Results
+
+- **Small differences (2%)**: Require very large samples (>7,000 per model)
+- **Medium differences (5%)**: Feasible with MMLU or HellaSwag (~1,000 per model)
+- **Large differences (10%+)**: Achievable with most benchmarks (~300 per model)
+
+**Tip:** If you can't achieve the required sample size, consider:
+1. Increasing expected effect size (comparing more different models)
+2. Combining multiple benchmarks
+3. Using 80% power instead of 95%
+4. Reporting effect sizes alongside significance
+
+---
+
+## Reproducibility Settings
+
+**New in v2.3.0:** Full reproducibility controls for academic evaluations.
+
+### CLI Options
+
+```bash
+# Fully reproducible evaluation
+llm-eval benchmark --model llama3.2:1b \
+    --seed 42 \
+    --temperature 0.0 \
+    --sample-size 500
+
+# Academic command defaults to temperature=0.0
+llm-eval academic --model llama3.2:1b --seed 42
+```
+
+### Python API
+
+```python
+from llm_evaluator import ModelEvaluator
+from llm_evaluator.providers import OllamaProvider
+
+provider = OllamaProvider(model="llama3.2:1b")
+evaluator = ModelEvaluator(provider=provider)
+
+# Fully reproducible evaluation
+results = evaluator.evaluate_all_academic(
+    sample_size=500,
+    seed=42,           # Reproducible sample selection
+    temperature=0.0    # Deterministic LLM outputs
+)
+
+# Results include reproducibility manifest
+print(results.reproducibility_manifest)
+```
+
+### Reproducibility Manifest
+
+```json
+{
+  "model": "llama3.2:1b",
+  "sample_size": 500,
+  "random_seed": 42,
+  "temperature": 0.0,
+  "python_version": "3.11.5",
+  "package_version": "2.3.0",
+  "timestamp": "2024-12-02T10:30:00Z",
+  "results_hash": "sha256:abc123..."
+}
+```
+
+### Best Practices for Reproducibility
+
+1. **Always set a seed**: Use `--seed 42` (or any fixed number)
+2. **Use temperature=0**: Minimizes LLM output variance
+3. **Record package versions**: Include in your paper's appendix
+4. **Share your manifest**: Upload with supplementary materials
+5. **Cache responses**: Use `--cache` to store LLM outputs
+
+---
+
 ## Complete Academic Example
 
 ```python
@@ -407,7 +538,7 @@ print("\n✅ Exported: results.tex, citations.bib, reproducibility.json")
 
 Use this template for your methods section:
 
-> We evaluated [MODEL] using the LLM Benchmark Toolkit (v2.1.0) on three standard benchmarks: MMLU (Hendrycks et al., 2021), TruthfulQA (Lin et al., 2022), and HellaSwag (Zellers et al., 2019). We sampled 500 questions per benchmark and report accuracy with 95% Wilson score confidence intervals. Statistical significance was assessed using McNemar's test (α = 0.05).
+> We evaluated [MODEL] using the LLM Benchmark Toolkit (v2.3.0) on three standard benchmarks: MMLU (Hendrycks et al., 2021), TruthfulQA (Lin et al., 2022), and HellaSwag (Zellers et al., 2019). We sampled 500 questions per benchmark and report accuracy with 95% Wilson score confidence intervals. Statistical significance was assessed using McNemar's test (α = 0.05). For reproducibility, we set the random seed to 42 and temperature to 0.0.
 
 ---
 

@@ -55,7 +55,7 @@ class TestBenchmarkRunnerSecurityBenchmarks:
         """Test Do-Not-Answer demo mode"""
 
         # Mock provider that refuses to answer harmful prompts
-        def mock_response(prompt):
+        def mock_response(prompt, config=None):
             response = Mock()
             if "hack" in prompt.lower():
                 response.text = "I cannot help with that request. This seems potentially harmful."
@@ -78,7 +78,7 @@ class TestBenchmarkRunnerSecurityBenchmarks:
         """Test SafetyBench demo mode"""
 
         # Mock provider that gives safety-conscious answers
-        def mock_response(prompt):
+        def mock_response(prompt, config=None):
             response = Mock()
             if "safe way" in prompt.lower() or "ethical" in prompt.lower():
                 response.text = "A"  # Choose the safe option
@@ -104,7 +104,7 @@ class TestBenchmarkRunnerKnowledgeBenchmarks:
     def test_run_arc_demo(self):
         """Test ARC-Challenge demo mode"""
 
-        def mock_response(prompt):
+        def mock_response(prompt, config=None):
             response = Mock()
             response.text = "A"  # Always answer A
             return response
@@ -122,7 +122,7 @@ class TestBenchmarkRunnerKnowledgeBenchmarks:
     def test_run_winogrande_demo(self):
         """Test WinoGrande demo mode"""
 
-        def mock_response(prompt):
+        def mock_response(prompt, config=None):
             response = Mock()
             response.text = "1"  # Choose option 1
             return response
@@ -140,7 +140,7 @@ class TestBenchmarkRunnerKnowledgeBenchmarks:
     def test_run_commonsenseqa_demo(self):
         """Test CommonsenseQA demo mode"""
 
-        def mock_response(prompt):
+        def mock_response(prompt, config=None):
             response = Mock()
             response.text = "A"
             return response
@@ -158,7 +158,7 @@ class TestBenchmarkRunnerKnowledgeBenchmarks:
     def test_run_boolq_demo(self):
         """Test BoolQ demo mode"""
 
-        def mock_response(prompt):
+        def mock_response(prompt, config=None):
             response = Mock()
             response.text = "yes"
             return response
@@ -198,7 +198,7 @@ class TestBenchmarkRunnerFullMode:
         mock_dataset = {"test": mock_data}
         mock_load.return_value = mock_dataset
 
-        def mock_response(prompt):
+        def mock_response(prompt, config=None):
             response = Mock()
             response.text = "B"  # Correct answer (index 1)
             return response
@@ -252,7 +252,7 @@ class TestBenchmarkRunnerEdgeCases:
     def test_benchmark_with_empty_response(self):
         """Test handling of empty model responses"""
 
-        def mock_response(prompt):
+        def mock_response(prompt, config=None):
             response = Mock()
             response.text = ""
             return response
@@ -268,7 +268,7 @@ class TestBenchmarkRunnerEdgeCases:
     def test_benchmark_with_unexpected_response(self):
         """Test handling of unexpected model responses"""
 
-        def mock_response(prompt):
+        def mock_response(prompt, config=None):
             response = Mock()
             response.text = "I don't understand the question"
             return response
@@ -283,7 +283,7 @@ class TestBenchmarkRunnerEdgeCases:
     def test_run_all_extended_benchmarks(self):
         """Test running all available benchmarks"""
 
-        def mock_response(prompt):
+        def mock_response(prompt, config=None):
             response = Mock()
             response.text = "A"
             return response
@@ -304,7 +304,7 @@ class TestBenchmarkRunnerEdgeCases:
     def test_benchmark_aggregate_score_calculation(self):
         """Test aggregate score is calculated correctly"""
 
-        def mock_response(prompt):
+        def mock_response(prompt, config=None):
             response = Mock()
             if "2+2" in prompt:
                 response.text = "B"  # Correct for MMLU demo

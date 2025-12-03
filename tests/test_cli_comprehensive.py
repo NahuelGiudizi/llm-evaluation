@@ -51,7 +51,7 @@ class TestCLIVersionCommand:
         result = runner.invoke(cli, ["--version"])
 
         assert result.exit_code == 0
-        assert "2.1.0" in result.output or "version" in result.output.lower()
+        assert "2.3.0" in result.output or "version" in result.output.lower()
 
 
 class TestCLIHelpCommands:
@@ -134,7 +134,7 @@ class TestCLIVersion:
         """Test __version__ variable"""
         from llm_evaluator.cli import __version__
 
-        assert __version__ == "2.1.0"
+        assert __version__ == "2.3.0"
 
 
 class TestCLIAcademic:

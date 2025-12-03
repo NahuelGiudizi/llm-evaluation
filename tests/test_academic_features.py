@@ -402,3 +402,195 @@ class TestCalculateAllStatistics:
 
         assert "bootstrap_ci" in stats
         assert len(stats["bootstrap_ci"]) == 2
+
+
+class TestPowerAnalysis:
+    """Tests for power analysis functions."""
+
+    def test_power_analysis_basic(self) -> None:
+        """Test basic power analysis calculation."""
+        from llm_evaluator.statistical_metrics import power_analysis_sample_size
+
+        result = power_analysis_sample_size(
+            expected_difference=0.05,
+            baseline_accuracy=0.75,
+            power=0.80,
+            alpha=0.05,
+        )
+
+        assert "n_per_group" in result
+        assert "total_n" in result
+        assert "effect_size_h" in result
+        assert "interpretation" in result
+        assert "recommendations" in result
+        assert result["n_per_group"] > 0
+        assert result["total_n"] == result["n_per_group"] * 2
+
+    def test_power_analysis_larger_difference_needs_smaller_sample(self) -> None:
+        """Larger effect size needs smaller sample."""
+        from llm_evaluator.statistical_metrics import power_analysis_sample_size
+
+        small_diff = power_analysis_sample_size(expected_difference=0.05)
+        large_diff = power_analysis_sample_size(expected_difference=0.15)
+
+        assert large_diff["n_per_group"] < small_diff["n_per_group"]
+
+    def test_power_analysis_higher_power_needs_larger_sample(self) -> None:
+        """Higher power needs larger sample size."""
+        from llm_evaluator.statistical_metrics import power_analysis_sample_size
+
+        power_80 = power_analysis_sample_size(power=0.80)
+        power_95 = power_analysis_sample_size(power=0.95)
+
+        assert power_95["n_per_group"] > power_80["n_per_group"]
+
+    def test_power_analysis_effect_size(self) -> None:
+        """Test Cohen's h effect size is calculated."""
+        from llm_evaluator.statistical_metrics import power_analysis_sample_size
+
+        result = power_analysis_sample_size(
+            expected_difference=0.10,
+            baseline_accuracy=0.70,
+        )
+
+        assert result["effect_size_h"] > 0
+        assert 0 < result["effect_size_h"] < 1
+
+    def test_power_analysis_recommendations(self) -> None:
+        """Test benchmark recommendations are included."""
+        from llm_evaluator.statistical_metrics import power_analysis_sample_size
+
+        result = power_analysis_sample_size()
+
+        recs = result["recommendations"]
+        assert "mmlu" in recs
+        assert "truthfulqa" in recs
+        assert "hellaswag" in recs
+        assert "gsm8k" in recs
+
+    def test_power_analysis_invalid_inputs(self) -> None:
+        """Test error handling for invalid inputs."""
+        from llm_evaluator.statistical_metrics import power_analysis_sample_size
+
+        with pytest.raises(ValueError):
+            power_analysis_sample_size(baseline_accuracy=1.5)  # > 1
+
+        with pytest.raises(ValueError):
+            power_analysis_sample_size(expected_difference=-0.1)  # negative
+
+        with pytest.raises(ValueError):
+            power_analysis_sample_size(baseline_accuracy=0.95, expected_difference=0.10)  # sum > 1
+
+    def test_minimum_sample_size_table(self) -> None:
+        """Test reference table generation."""
+        from llm_evaluator.statistical_metrics import minimum_sample_size_table
+
+        table = minimum_sample_size_table()
+
+        assert "power_80" in table
+        assert "power_90" in table
+        assert "power_95" in table
+
+        assert "diff_2pct" in table["power_80"]
+        assert "diff_5pct" in table["power_80"]
+        assert "diff_10pct" in table["power_80"]
+        assert "diff_15pct" in table["power_80"]
+
+        # Smaller differences need larger samples
+        assert table["power_80"]["diff_2pct"] > table["power_80"]["diff_10pct"]
+
+        # Higher power needs larger samples
+        assert table["power_95"]["diff_5pct"] > table["power_80"]["diff_5pct"]
+
+
+class TestReproducibilitySeeds:
+    """Tests for reproducibility with seeds."""
+
+    def test_benchmark_runner_accepts_seed(self) -> None:
+        """Test BenchmarkRunner accepts seed parameter."""
+        from unittest.mock import Mock
+
+        from llm_evaluator.benchmarks import BenchmarkRunner
+        from llm_evaluator.providers import GenerationConfig, GenerationResult
+
+        provider = Mock()
+        provider.model = "test"
+        provider.config = GenerationConfig()
+        provider.generate.return_value = GenerationResult(
+            text="A",
+            response_time=0.1,
+            tokens_used=10,
+            model="test",
+            metadata={},
+        )
+
+        runner = BenchmarkRunner(provider, use_full_datasets=False, seed=42)
+        assert runner.seed == 42
+
+    def test_benchmark_runner_accepts_temperature(self) -> None:
+        """Test BenchmarkRunner accepts temperature parameter."""
+        from unittest.mock import Mock
+
+        from llm_evaluator.benchmarks import BenchmarkRunner
+        from llm_evaluator.providers import GenerationConfig, GenerationResult
+
+        provider = Mock()
+        provider.model = "test"
+        provider.config = GenerationConfig()
+        provider.generate.return_value = GenerationResult(
+            text="A",
+            response_time=0.1,
+            tokens_used=10,
+            model="test",
+            metadata={},
+        )
+
+        runner = BenchmarkRunner(provider, use_full_datasets=False, temperature=0.0)
+        assert runner.temperature == 0.0
+
+    def test_generation_config_created_with_temperature(self) -> None:
+        """Test _get_generation_config creates config with temperature."""
+        from unittest.mock import Mock
+
+        from llm_evaluator.benchmarks import BenchmarkRunner
+        from llm_evaluator.providers import GenerationConfig, GenerationResult
+
+        provider = Mock()
+        provider.model = "test"
+        provider.config = GenerationConfig()
+        provider.generate.return_value = GenerationResult(
+            text="A",
+            response_time=0.1,
+            tokens_used=10,
+            model="test",
+            metadata={},
+        )
+
+        runner = BenchmarkRunner(provider, use_full_datasets=False, temperature=0.5)
+        config = runner._get_generation_config()
+
+        assert config is not None
+        assert config.temperature == 0.5
+
+    def test_no_config_when_no_temperature(self) -> None:
+        """Test _get_generation_config returns None when no temperature set."""
+        from unittest.mock import Mock
+
+        from llm_evaluator.benchmarks import BenchmarkRunner
+        from llm_evaluator.providers import GenerationConfig, GenerationResult
+
+        provider = Mock()
+        provider.model = "test"
+        provider.config = GenerationConfig()
+        provider.generate.return_value = GenerationResult(
+            text="A",
+            response_time=0.1,
+            tokens_used=10,
+            model="test",
+            metadata={},
+        )
+
+        runner = BenchmarkRunner(provider, use_full_datasets=False)
+        config = runner._get_generation_config()
+
+        assert config is None
