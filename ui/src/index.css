@@ -332,19 +332,23 @@ body {
   }
 
   .status-dot-success {
-    @apply status-dot bg-success-500 shadow-[0_0_8px_rgba(16, 185, 129, 0.6)];
+    @apply status-dot bg-success-500;
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
   }
 
   .status-dot-error {
-    @apply status-dot bg-error-500 shadow-[0_0_8px_rgba(244, 63, 94, 0.6)];
+    @apply status-dot bg-error-500;
+    box-shadow: 0 0 8px rgba(244, 63, 94, 0.6);
   }
 
   .status-dot-warning {
-    @apply status-dot bg-warning-500 shadow-[0_0_8px_rgba(245, 158, 11, 0.6)];
+    @apply status-dot bg-warning-500;
+    box-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
   }
 
   .status-dot-running {
-    @apply status-dot bg-primary-500 shadow-[0_0_8px_rgba(59, 130, 246, 0.6)] animate-pulse;
+    @apply status-dot bg-primary-500 animate-pulse;
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.6);
   }
 }
 

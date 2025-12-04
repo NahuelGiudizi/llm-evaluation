@@ -32,6 +32,8 @@ function extractScore(benchmarkName, data) {
   if (data.boolq_accuracy !== undefined) return data.boolq_accuracy
   if (data.safetybench_accuracy !== undefined) return data.safetybench_accuracy
   if (data.donotanswer_refusal_rate !== undefined) return data.donotanswer_refusal_rate
+  if (data.donotanswer_accuracy !== undefined) return data.donotanswer_accuracy
+  if (data.gsm8k_accuracy !== undefined) return data.gsm8k_accuracy
   if (data.accuracy !== undefined) return data.accuracy
   if (data.correct !== undefined && data.questions_tested !== undefined && data.questions_tested > 0) {
     return data.correct / data.questions_tested

@@ -27,7 +27,11 @@ function ProgressViewer({ activeRun }) {
   const [showQueue, setShowQueue] = useState(false)
   const logsEndRef = useRef(null)
   const queueLogsEndRef = useRef(null)
+  const logsContainerRef = useRef(null)
+  const queueLogsContainerRef = useRef(null)
   const pollIntervalRef = useRef(null)
+  const [autoScrollLogs, setAutoScrollLogs] = useState(true)
+  const [autoScrollQueueLogs, setAutoScrollQueueLogs] = useState(true)
 
   async function handleCancel() {
     if (!activeRun || cancelling) return
@@ -125,10 +129,12 @@ function ProgressViewer({ activeRun }) {
     }
   }, [queueStatus?.items])
 
-  // Auto-scroll queue logs
+  // Auto-scroll queue logs only if user is near bottom
   useEffect(() => {
-    queueLogsEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [currentQueueRun?.logs])
+    if (autoScrollQueueLogs) {
+      queueLogsEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }
+  }, [currentQueueRun?.logs, autoScrollQueueLogs])
 
   useEffect(() => {
     if (!activeRun) {
@@ -187,8 +193,36 @@ function ProgressViewer({ activeRun }) {
   }, [activeRun])
 
   useEffect(() => {
-    logsEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [run?.logs])
+    if (autoScrollLogs) {
+      logsEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }
+  }, [run?.logs, autoScrollLogs])
+
+  // Detect manual scroll and disable auto-scroll if user scrolls up
+  useEffect(() => {
+    const handleLogsScroll = (e) => {
+      const container = e.target
+      const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100
+      setAutoScrollLogs(isNearBottom)
+    }
+
+    const handleQueueLogsScroll = (e) => {
+      const container = e.target
+      const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100
+      setAutoScrollQueueLogs(isNearBottom)
+    }
+
+    const logsContainer = logsContainerRef.current
+    const queueLogsContainer = queueLogsContainerRef.current
+
+    logsContainer?.addEventListener('scroll', handleLogsScroll)
+    queueLogsContainer?.addEventListener('scroll', handleQueueLogsScroll)
+
+    return () => {
+      logsContainer?.removeEventListener('scroll', handleLogsScroll)
+      queueLogsContainer?.removeEventListener('scroll', handleQueueLogsScroll)
+    }
+  }, [])
 
   // Extract logs from run data
   const logs = run?.logs?.map(l => typeof l === 'object' ? l.message : l) || []
@@ -453,7 +487,7 @@ function ProgressViewer({ activeRun }) {
               </div>
               <span className="text-xs text-primary-400 animate-pulse">● Live</span>
             </div>
-            <div className="p-4 h-64 overflow-auto font-mono text-xs">
+            <div className="p-4 h-64 overflow-auto font-mono text-xs" ref={queueLogsContainerRef}>
               {(!currentQueueRun.logs || currentQueueRun.logs.length === 0) ? (
                 <p className="text-slate-500">Waiting for logs...</p>
               ) : (
@@ -677,7 +711,7 @@ function ProgressViewer({ activeRun }) {
             <span className="text-xs text-primary-400 animate-pulse">● Live</span>
           )}
         </div>
-        <div className="p-4 h-80 overflow-auto font-mono text-xs">
+        <div className="p-4 h-80 overflow-auto font-mono text-xs" ref={logsContainerRef}>
           {logs.length === 0 ? (
             <p className="text-slate-500">Waiting for logs...</p>
           ) : (

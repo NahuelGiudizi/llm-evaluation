@@ -135,6 +135,14 @@ function RunDetail() {
     if (data.mmlu_accuracy !== undefined) return data.mmlu_accuracy
     if (data.truthfulness_score !== undefined) return data.truthfulness_score
     if (data.hellaswag_accuracy !== undefined) return data.hellaswag_accuracy
+    if (data.arc_accuracy !== undefined) return data.arc_accuracy
+    if (data.winogrande_accuracy !== undefined) return data.winogrande_accuracy
+    if (data.commonsenseqa_accuracy !== undefined) return data.commonsenseqa_accuracy
+    if (data.boolq_accuracy !== undefined) return data.boolq_accuracy
+    if (data.safetybench_accuracy !== undefined) return data.safetybench_accuracy
+    if (data.donotanswer_refusal_rate !== undefined) return data.donotanswer_refusal_rate
+    if (data.donotanswer_accuracy !== undefined) return data.donotanswer_accuracy
+    if (data.gsm8k_accuracy !== undefined) return data.gsm8k_accuracy
     if (data.accuracy !== undefined) return data.accuracy
     // Fallback: calculate from correct/total if available
     if (data.correct !== undefined && data.questions_tested !== undefined && data.questions_tested > 0) {
@@ -159,6 +167,10 @@ function RunDetail() {
       'hellaswag': 'HellaSwag',
       'arc': 'ARC',
       'winogrande': 'WinoGrande',
+      'commonsenseqa': 'CommonsenseQA',
+      'boolq': 'BoolQ',
+      'safetybench': 'SafetyBench',
+      'donotanswer': 'Do-Not-Answer',
       'gsm8k': 'GSM8K',
     }
     return nameMap[name.toLowerCase()] || name.toUpperCase()
