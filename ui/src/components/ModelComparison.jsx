@@ -185,6 +185,8 @@ function ModelComparison() {
   const [loading, setLoading] = useState(true)
   const [selectedRuns, setSelectedRuns] = useState([])
   const [chartType, setChartType] = useState('bar')
+  const [sortBy, setSortBy] = useState('date-desc') // date-desc, date-asc, model-asc, model-desc, score-desc, score-asc, samples-desc, samples-asc, temp-asc, temp-desc
+  const [highlightedRun, setHighlightedRun] = useState(null) // Track which run is highlighted
 
   useEffect(() => {
     loadRuns()
@@ -209,6 +211,49 @@ function ModelComparison() {
     } finally {
       setLoading(false)
     }
+  }
+
+  // Sort runs based on selected criteria
+  const sortedRuns = [...runs].sort((a, b) => {
+    switch (sortBy) {
+      case 'date-desc':
+        return new Date(b.started_at) - new Date(a.started_at)
+      case 'date-asc':
+        return new Date(a.started_at) - new Date(b.started_at)
+      case 'model-asc':
+        return a.model.localeCompare(b.model)
+      case 'model-desc':
+        return b.model.localeCompare(a.model)
+      case 'score-desc': {
+        const avgA = calculateAverage(a.results)
+        const avgB = calculateAverage(b.results)
+        return avgB - avgA
+      }
+      case 'score-asc': {
+        const avgA = calculateAverage(a.results)
+        const avgB = calculateAverage(b.results)
+        return avgA - avgB
+      }
+      case 'samples-desc':
+        return (b.sample_size || 0) - (a.sample_size || 0)
+      case 'samples-asc':
+        return (a.sample_size || 0) - (b.sample_size || 0)
+      case 'temp-asc':
+        return (a.inference_settings?.temperature ?? 0) - (b.inference_settings?.temperature ?? 0)
+      case 'temp-desc':
+        return (b.inference_settings?.temperature ?? 0) - (a.inference_settings?.temperature ?? 0)
+      default:
+        return 0
+    }
+  })
+
+  // Helper to calculate average score
+  function calculateAverage(results) {
+    if (!results) return 0
+    const scores = Object.entries(results)
+      .filter(([name]) => name.toLowerCase() !== 'average')
+      .map(([name, data]) => extractScore(name, data))
+    return scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : 0
   }
 
   function toggleRunSelection(runId) {
@@ -332,9 +377,27 @@ function ModelComparison() {
         <>
           {/* Run selection */}
           <div className="mb-6">
-            <h3 className="text-sm font-medium text-slate-300 mb-3">Select runs to compare:</h3>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-medium text-slate-300">Select runs to compare:</h3>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 text-sm focus:outline-none focus:border-primary-500"
+              >
+                <option value="date-desc">Date (Newest)</option>
+                <option value="date-asc">Date (Oldest)</option>
+                <option value="model-asc">Model (A-Z)</option>
+                <option value="model-desc">Model (Z-A)</option>
+                <option value="score-desc">Score (Highest)</option>
+                <option value="score-asc">Score (Lowest)</option>
+                <option value="samples-desc">Samples (Most)</option>
+                <option value="samples-asc">Samples (Least)</option>
+                <option value="temp-asc">Temperature (Low-High)</option>
+                <option value="temp-desc">Temperature (High-Low)</option>
+              </select>
+            </div>
             <div className="flex flex-wrap gap-2">
-              {runs.map(run => {
+              {sortedRuns.map(run => {
                 const runTime = new Date(run.started_at)
                 const timeStr = runTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                 const dateStr = runTime.toLocaleDateString()
@@ -417,14 +480,25 @@ function ModelComparison() {
                     />
                     <YAxis tick={{ fill: '#94a3b8' }} domain={[0, 100]} />
                     <Tooltip content={<CustomTooltip />} />
-                    <Legend wrapperStyle={{ paddingTop: 20 }} />
-                    {selectedRunsData.map((run, i) => (
-                      <Bar
-                        key={run.run_id}
-                        dataKey={getRunKey(run)}
-                        fill={colors[i % colors.length]}
-                      />
-                    ))}
+                    <Legend 
+                      wrapperStyle={{ paddingTop: 20, cursor: 'pointer' }}
+                      onClick={(e) => {
+                        const runKey = e.value
+                        setHighlightedRun(highlightedRun === runKey ? null : runKey)
+                      }}
+                    />
+                    {selectedRunsData.map((run, i) => {
+                      const runKey = getRunKey(run)
+                      const isHighlighted = highlightedRun === null || highlightedRun === runKey
+                      return (
+                        <Bar
+                          key={run.run_id}
+                          dataKey={runKey}
+                          fill={colors[i % colors.length]}
+                          fillOpacity={isHighlighted ? 1 : 0.2}
+                        />
+                      )
+                    })}
                   </BarChart>
                 </ResponsiveContainer>
               ) : radarData.length >= 3 ? (
@@ -447,37 +521,36 @@ function ModelComparison() {
                       tickCount={5}
                       axisLine={false}
                     />
-                    {selectedRunsData.map((run, i) => (
-                      <Radar
-                        key={run.run_id}
-                        name={getRunKey(run)}
-                        dataKey={getRunKey(run)}
-                        stroke={colors[i % colors.length]}
-                        strokeWidth={2}
-                        fill={colors[i % colors.length]}
-                        fillOpacity={0.4}
-                        dot={{
-                          r: 5,
-                          fill: colors[i % colors.length],
-                          stroke: '#fff',
-                          strokeWidth: 2,
-                        }}
-                        activeDot={{
-                          r: 7,
-                          fill: colors[i % colors.length],
-                          stroke: '#fff',
-                          strokeWidth: 2,
-                        }}
-                        isAnimationActive={false}
-                      />
-                    ))}
+                    {selectedRunsData.map((run, i) => {
+                      const runKey = getRunKey(run)
+                      const isHighlighted = highlightedRun === null || highlightedRun === runKey
+                      return (
+                        <Radar
+                          key={run.run_id}
+                          name={runKey}
+                          dataKey={runKey}
+                          stroke={colors[i % colors.length]}
+                          strokeWidth={isHighlighted ? 3 : 1}
+                          fill={colors[i % colors.length]}
+                          fillOpacity={isHighlighted ? 0.6 : 0.1}
+                          dot={false}
+                          activeDot={false}
+                          isAnimationActive={false}
+                        />
+                      )
+                    })}
                     <Tooltip content={<CustomTooltip />} />
                     <Legend
                       wrapperStyle={{
                         paddingTop: 20,
                         fontSize: 13,
+                        cursor: 'pointer',
                       }}
                       iconType="circle"
+                      onClick={(e) => {
+                        const runKey = e.value
+                        setHighlightedRun(highlightedRun === runKey ? null : runKey)
+                      }}
                     />
                   </RadarChart>
                 </ResponsiveContainer>
