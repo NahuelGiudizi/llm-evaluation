@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "llm-benchmark-toolkit"
-version = "2.3.2"
+version = "2.3.3"
 description = "Benchmark LLMs with 9 benchmarks & 100K+ questions. 8 providers: OpenAI, Anthropic, Groq, Together, Fireworks, DeepSeek, Ollama, HuggingFace. Web dashboard included."
 readme = "README.md"
 authors = [

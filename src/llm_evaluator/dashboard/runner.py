@@ -484,13 +484,13 @@ class EvaluationRunner:
         processor_name = platform.processor()
         if platform.system() == "Windows":
             try:
-                import winreg
+                import winreg  # type: ignore[import-not-found]
 
-                key = winreg.OpenKey(
-                    winreg.HKEY_LOCAL_MACHINE, r"HARDWARE\DESCRIPTION\System\CentralProcessor\0"
+                key = winreg.OpenKey(  # type: ignore[attr-defined]
+                    winreg.HKEY_LOCAL_MACHINE, r"HARDWARE\DESCRIPTION\System\CentralProcessor\0"  # type: ignore[attr-defined]
                 )
-                processor_name = winreg.QueryValueEx(key, "ProcessorNameString")[0].strip()
-                winreg.CloseKey(key)
+                processor_name = winreg.QueryValueEx(key, "ProcessorNameString")[0].strip()  # type: ignore[attr-defined]
+                winreg.CloseKey(key)  # type: ignore[attr-defined]
             except Exception:
                 pass  # Fall back to platform.processor()
 

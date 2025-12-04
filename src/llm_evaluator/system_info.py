@@ -7,9 +7,15 @@ import platform
 import subprocess
 from dataclasses import asdict, dataclass
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, TYPE_CHECKING
 
 import psutil
+
+if TYPE_CHECKING:
+    try:
+        import winreg  # type: ignore[import-not-found]
+    except ImportError:
+        pass
 
 
 @dataclass
@@ -75,14 +81,14 @@ def get_cpu_model() -> str:
     """Get CPU model name"""
     try:
         if platform.system() == "Windows":
-            import winreg
+            import winreg  # type: ignore[import-not-found]
 
-            key = winreg.OpenKey(
-                winreg.HKEY_LOCAL_MACHINE,
+            key = winreg.OpenKey(  # type: ignore[attr-defined]
+                winreg.HKEY_LOCAL_MACHINE,  # type: ignore[attr-defined]
                 r"HARDWARE\DESCRIPTION\System\CentralProcessor\0",
             )
-            cpu_name: str = winreg.QueryValueEx(key, "ProcessorNameString")[0]
-            winreg.CloseKey(key)
+            cpu_name: str = winreg.QueryValueEx(key, "ProcessorNameString")[0]  # type: ignore[attr-defined]
+            winreg.CloseKey(key)  # type: ignore[attr-defined]
             return cpu_name.strip()
         elif platform.system() == "Linux":
             with open("/proc/cpuinfo") as f:
