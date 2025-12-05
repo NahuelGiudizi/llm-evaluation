@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "llm-benchmark-toolkit"
-version = "2.4.0"
-description = "Benchmark LLMs with 9 benchmarks & 100K+ questions. 8 providers: OpenAI, Anthropic, Groq, Together, Fireworks, DeepSeek, Ollama, HuggingFace. Web dashboard included."
+version = "2.4.1"
+description = "Benchmark LLMs with 10 benchmarks & 132K+ questions. 8 providers: OpenAI, Anthropic, Groq, Together, Fireworks, DeepSeek, Ollama, HuggingFace. Unified CLI + Web dashboard."
 readme = "README.md"
 authors = [
     {name = "Nahuel Giudizi", email = "nahuelgiudizi@hotmail.com"}
@@ -30,9 +30,11 @@ classifiers = [
 keywords = [
     "llm", "evaluation", "benchmark", "mmlu", "truthfulqa", "hellaswag",
     "arc", "winogrande", "commonsenseqa", "boolq", "safetybench",
-    "gpt", "gpt-4", "claude", "ollama", "openai", "anthropic",
+    "gpt", "gpt-4", "gpt-4o", "claude", "ollama", "openai", "anthropic",
     "ai", "machine-learning", "deep-learning", "nlp", "language-model",
-    "dashboard", "academic", "research", "testing", "metrics"
+    "dashboard", "academic", "research", "testing", "metrics",
+    "llama", "mistral", "gemini", "cohere", "together-ai",
+    "model-comparison", "performance-testing", "ml-ops", "mlops"
 ]
 requires-python = ">=3.11"
 dependencies = [

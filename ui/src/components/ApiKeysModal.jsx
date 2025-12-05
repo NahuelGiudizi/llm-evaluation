@@ -43,7 +43,7 @@ function ApiKeysModal({ isOpen, onClose }) {
           api_key: keys[provider] || '',
         }),
       })
-      
+
       if (res.ok) {
         await loadKeys()
         setKeys(prev => ({ ...prev, [provider]: '' }))
@@ -78,7 +78,7 @@ function ApiKeysModal({ isOpen, onClose }) {
         {/* Header */}
         <div className="px-6 py-4 border-b border-border-default flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+            <div className="w-10 h-10 bg-accent rounded-xl flex items-center justify-center">
               <Key className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -143,11 +143,10 @@ function ApiKeysModal({ isOpen, onClose }) {
                         <button
                           onClick={() => saveKey(provider)}
                           disabled={!keys[provider] || isSaving}
-                          className={`btn btn-sm ${
-                            isSaving
+                          className={`btn btn-sm ${isSaving
                               ? 'bg-success text-white'
                               : 'btn-primary'
-                          }`}
+                            }`}
                         >
                           {isSaving ? (
                             <>

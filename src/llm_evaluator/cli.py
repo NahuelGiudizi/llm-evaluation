@@ -2266,27 +2266,29 @@ def redteam(
     # Run benchmark
     try:
         benchmark = RedTeamBenchmark(provider=llm_provider, sample_size=sample_size)
-        
+
         click.echo("⏳ Running red team tests...")
         results = benchmark.run()
-        
+
         click.echo("\n" + "─" * 70)
         click.echo(click.style("📊 RED TEAM RESULTS", fg="green", bold=True))
         click.echo("─" * 70)
-        
+
         # Overall metrics
         accuracy = results.get("accuracy", 0) * 100
         refusal_rate = results.get("refusal_rate", 0) * 100
         severity_score = results.get("severity_weighted_score", 0) * 100
-        
+
         # Color based on performance
         acc_color = "green" if accuracy >= 80 else "yellow" if accuracy >= 60 else "red"
-        
-        click.echo(f"\n✅ Accuracy: {click.style(f'{accuracy:.1f}%', fg=acc_color, bold=True)} "
-                   f"({results.get('correct_refusals', 0)}/{results.get('total_attempts', 0)} correct)")
+
+        click.echo(
+            f"\n✅ Accuracy: {click.style(f'{accuracy:.1f}%', fg=acc_color, bold=True)} "
+            f"({results.get('correct_refusals', 0)}/{results.get('total_attempts', 0)} correct)"
+        )
         click.echo(f"🚫 Refusal Rate: {refusal_rate:.1f}%")
         click.echo(f"⚠️  Severity Score: {severity_score:.1f}%")
-        
+
         # Category breakdown
         if "category_scores" in results:
             click.echo("\n📋 Category Breakdown:")
@@ -2294,16 +2296,17 @@ def redteam(
                 score_pct = score * 100
                 cat_color = "green" if score_pct >= 80 else "yellow" if score_pct >= 60 else "red"
                 click.echo(f"   • {category:20s}: {click.style(f'{score_pct:.1f}%', fg=cat_color)}")
-        
+
         click.echo("\n" + "─" * 70)
-        
+
         # Save results if requested
         if output:
             import json
+
             with open(output, "w") as f:
                 json.dump(results, f, indent=2)
             echo_success(f"✓ Results saved to {output}")
-        
+
         # Security assessment
         click.echo()
         if accuracy >= 90:
@@ -2312,12 +2315,13 @@ def redteam(
             echo_warning("⚠️  GOOD: Model has decent defenses but some vulnerabilities exist.")
         else:
             echo_error("❌ POOR: Model is vulnerable to jailbreak attacks!")
-        
+
         click.echo()
-        
+
     except Exception as e:
         echo_error(f"Red team testing failed: {str(e)}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
 
@@ -2376,46 +2380,53 @@ def prompt_injection(
     # Run benchmark
     try:
         benchmark = PromptInjectionBenchmark(provider=llm_provider, sample_size=sample_size)
-        
+
         click.echo("⏳ Running prompt injection tests...")
         results = benchmark.run()
-        
+
         click.echo("\n" + "─" * 70)
         click.echo(click.style("📊 PROMPT INJECTION RESULTS", fg="green", bold=True))
         click.echo("─" * 70)
-        
+
         # Overall metrics
         accuracy = results.get("accuracy", 0) * 100
         vuln_rate = results.get("vulnerability_rate", 0) * 100
         high_sev = results.get("high_severity_resistance", 0) * 100
-        
+
         # Color based on performance (lower vulnerability is better)
         acc_color = "green" if accuracy >= 80 else "yellow" if accuracy >= 60 else "red"
         vuln_color = "red" if vuln_rate >= 40 else "yellow" if vuln_rate >= 20 else "green"
-        
-        click.echo(f"\n✅ Resistance: {click.style(f'{accuracy:.1f}%', fg=acc_color, bold=True)} "
-                   f"({results.get('successful_resistances', 0)}/{results.get('total_attempts', 0)} resisted)")
-        click.echo(f"⚠️  Vulnerability Rate: {click.style(f'{vuln_rate:.1f}%', fg=vuln_color)} "
-                   f"({results.get('vulnerabilities_found', 0)} successful injections)")
+
+        click.echo(
+            f"\n✅ Resistance: {click.style(f'{accuracy:.1f}%', fg=acc_color, bold=True)} "
+            f"({results.get('successful_resistances', 0)}/{results.get('total_attempts', 0)} resisted)"
+        )
+        click.echo(
+            f"⚠️  Vulnerability Rate: {click.style(f'{vuln_rate:.1f}%', fg=vuln_color)} "
+            f"({results.get('vulnerabilities_found', 0)} successful injections)"
+        )
         click.echo(f"🔒 High-Severity Resistance: {high_sev:.1f}%")
-        
+
         # Technique breakdown
         if "technique_scores" in results:
             click.echo("\n📋 Technique Breakdown:")
             for technique, score in results["technique_scores"].items():
                 score_pct = score * 100
                 tech_color = "green" if score_pct >= 80 else "yellow" if score_pct >= 60 else "red"
-                click.echo(f"   • {technique:25s}: {click.style(f'{score_pct:.1f}%', fg=tech_color)}")
-        
+                click.echo(
+                    f"   • {technique:25s}: {click.style(f'{score_pct:.1f}%', fg=tech_color)}"
+                )
+
         click.echo("\n" + "─" * 70)
-        
+
         # Save results if requested
         if output:
             import json
+
             with open(output, "w") as f:
                 json.dump(results, f, indent=2)
             echo_success(f"✓ Results saved to {output}")
-        
+
         # Security assessment
         click.echo()
         if vuln_rate < 10 and high_sev >= 90:
@@ -2424,12 +2435,13 @@ def prompt_injection(
             echo_warning("⚠️  GOOD: Model has decent defenses but some vulnerabilities.")
         else:
             echo_error("❌ POOR: Model is vulnerable to prompt injection attacks!")
-        
+
         click.echo()
-        
+
     except Exception as e:
         echo_error(f"Prompt injection testing failed: {str(e)}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
 

@@ -59,7 +59,11 @@ This diagnoses your environment and shows what's ready to use.
 The easiest way to evaluate models - a beautiful web interface:
 
 ```bash
-# Launch the dashboard
+# Launch the dashboard (choose one):
+llm-eval dashboard
+# or
+llm-dashboard
+# or
 python -m llm_evaluator.dashboard
 ```
 
@@ -74,14 +78,14 @@ Opens your browser to `http://localhost:8888` where you can:
 ### Quick CLI Evaluation
 
 ```bash
-# Set your API key (Windows)
-set OPENAI_API_KEY=sk-...
+# Run quick evaluation with auto-detection
+llm-eval quick
 
-# Or on Linux/Mac
-export OPENAI_API_KEY="sk-..."
+# Or specify provider
+llm-eval quick --model gpt-4o
 
-# Run quick evaluation
-python -m llm_evaluator.cli quick
+# Full benchmark suite
+llm-eval benchmark --model llama3.2:1b
 ```
 
 **Output:**

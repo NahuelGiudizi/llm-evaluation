@@ -5,9 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.1] - 2025-12-05
+
+### Fixed
+
+- **Package Metadata Synchronization**:
+  - Fixed inconsistency between `setup.py` (llm-evaluator 0.1.0) and `pyproject.toml` (llm-benchmark-toolkit 2.4.0)
+  - All build files now use consistent name: `llm-benchmark-toolkit`
+  - Version synchronized across all files: `2.4.1`
+
+### Added
+
+- **Documentation:**
+  - `MIGRATION.md` - Guide for users upgrading from 0.x and 2.0-2.2 versions
+  - `METRICS.md` - Transparent project analytics and download statistics
+  - Clear deprecation notices for versions < 2.3.0
+
+### Changed
+
+- **PyPI Keywords:** Added more search terms for better discoverability (gpt-4o, llama, mistral, gemini, model-comparison, mlops)
+- **README:** Updated CLI examples to show new `llm-eval` and `llm-dashboard` commands
+
 ## [2.4.0] - 2025-12-05
 
 ### Added
+
+- **Unified CLI Commands**:
+  - `llm-eval` - Main CLI with all commands (quick, run, benchmark, compare, dashboard, etc.)
+  - `llm-dashboard` - Direct shortcut to launch web dashboard
+  - Both commands available immediately after `pip install llm-benchmark-toolkit`
 
 - **API Keys Management UI**:
   - Session-based API key configuration in dashboard (zero friction, never persisted to disk)

@@ -75,6 +75,10 @@ function RunHistory() {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all')
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage] = useState(10)
+
   // Selection state
   const [selectedRuns, setSelectedRuns] = useState(new Set())
 
@@ -108,6 +112,17 @@ function RunHistory() {
     if (filter === 'all') return true
     return run.status === filter
   })
+
+  // Reset page when filter changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [filter])
+
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredRuns.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const paginatedRuns = filteredRuns.slice(startIndex, endIndex)
 
   // Selection handlers
   function toggleSelectRun(runId, event) {
@@ -280,13 +295,18 @@ function RunHistory() {
               </span>
             </button>
             <span className="text-sm text-tertiary">
-              {filteredRuns.length} runs
+              {filteredRuns.length} runs total
             </span>
+            {totalPages > 1 && (
+              <span className="text-sm text-tertiary ml-auto">
+                Page {currentPage} of {totalPages}
+              </span>
+            )}
           </div>
 
           {/* Runs List - Cleaner Card Design */}
           <div className="space-y-3">
-            {filteredRuns.map((run) => {
+            {paginatedRuns.map((run) => {
               // Calculate average score correctly
               const scores = run.results
                 ? Object.entries(run.results)
@@ -332,7 +352,7 @@ function RunHistory() {
                     >
                       <div className="flex items-center gap-2 flex-wrap">
                         <h3 className="font-semibold text-primary">{run.model}</h3>
-                        <span className="text-xs text-tertiary bg-surface-active px-2 py-0.5 rounded">
+                        <span className="text-xs font-medium text-secondary bg-surface border border-default px-2 py-0.5 rounded-md">
                           {run.provider}
                         </span>
                         <span className="text-xs text-tertiary font-mono">
@@ -402,15 +422,15 @@ function RunHistory() {
                           .map(([name, data]) => {
                             const score = extractScore(name, data)
                             const scoreColor = score === null ? 'text-tertiary' :
-                              score >= 0.7 ? 'text-green-400' :
-                                score >= 0.4 ? 'text-yellow-400' : 'text-red-400'
+                              score >= 0.7 ? 'text-green-600 dark:text-green-400' :
+                                score >= 0.4 ? 'text-amber-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'
                             return (
                               <span
                                 key={name}
-                                className="inline-flex items-center gap-1 text-xs bg-surface-active/50 px-2 py-1 rounded"
+                                className="inline-flex items-center gap-1.5 text-xs bg-surface border border-default px-2.5 py-1 rounded-md hover:bg-surface-hover transition-colors"
                               >
-                                <span className="text-tertiary">{formatBenchmarkName(name)}:</span>
-                                <span className={`font-medium ${scoreColor}`}>
+                                <span className="text-secondary font-medium">{formatBenchmarkName(name)}:</span>
+                                <span className={`font-semibold ${scoreColor}`}>
                                   {score !== null ? `${(score * 100).toFixed(0)}%` : 'N/A'}
                                 </span>
                               </span>
@@ -423,6 +443,58 @@ function RunHistory() {
               )
             })}
           </div>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="mt-6 flex items-center justify-center gap-2">
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-2 rounded-lg border border-default text-secondary hover:bg-surface disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Previous
+              </button>
+              <div className="flex items-center gap-1">
+                {[...Array(totalPages)].map((_, i) => {
+                  const page = i + 1
+                  // Show first, last, current, and pages around current
+                  if (
+                    page === 1 ||
+                    page === totalPages ||
+                    (page >= currentPage - 1 && page <= currentPage + 1)
+                  ) {
+                    return (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`px-3 py-2 rounded-lg text-sm transition-colors ${
+                          currentPage === page
+                            ? 'bg-interactive text-text-inverse'
+                            : 'border border-default text-secondary hover:bg-surface'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    )
+                  } else if (page === currentPage - 2 || page === currentPage + 2) {
+                    return (
+                      <span key={page} className="px-2 text-tertiary">
+                        ...
+                      </span>
+                    )
+                  }
+                  return null
+                })}
+              </div>
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-2 rounded-lg border border-default text-secondary hover:bg-surface disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Next
+              </button>
+            </div>
+          )}
         </>
       )}
 

@@ -359,16 +359,26 @@ function RunDetail() {
               </h3>
               <ResponsiveContainer width="100%" height={Math.max(300, chartData.length * 40)}>
                 <BarChart data={chartData} layout="vertical" margin={{ left: 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                  <XAxis type="number" domain={[0, 100]} tick={{ fill: '#94a3b8' }} />
-                  <YAxis dataKey="name" type="category" width={150} tick={{ fill: '#94a3b8', fontSize: 12 }} />
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-border-default" />
+                  <XAxis type="number" domain={[0, 100]} tick={{ fill: 'currentColor' }} className="text-tertiary" />
+                  <YAxis dataKey="name" type="category" width={150} tick={{ fill: 'currentColor', fontSize: 12 }} className="text-tertiary" />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: '#1e293b',
-                      border: '1px solid #334155',
-                      borderRadius: '8px'
+                      backgroundColor: 'rgb(var(--color-surface) / 1)',
+                      border: '1px solid rgb(var(--color-border-default) / 1)',
+                      borderRadius: '12px',
+                      padding: '12px',
+                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                      color: 'rgb(var(--color-text-primary) / 1)'
                     }}
                     formatter={(value) => [`${value}%`, 'Score']}
+                    labelStyle={{
+                      color: 'rgb(var(--color-text-primary) / 1)',
+                      fontWeight: '600',
+                      marginBottom: '4px'
+                    }}
+                    wrapperStyle={{ zIndex: 1000, pointerEvents: 'none' }}
+                    cursor={{ fill: 'rgba(0, 0, 0, 0.05)' }}
                   />
                   <Bar dataKey="score" radius={[0, 4, 4, 0]}>
                     {chartData.map((entry, index) => (
@@ -395,7 +405,7 @@ function RunDetail() {
                     <div className="flex justify-between">
                       <span className="text-secondary dark:text-tertiary">Score</span>
                       <span className={`font-semibold ${score >= 0.7 ? 'text-green-600 dark:text-green-400' :
-                          score >= 0.5 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'
+                        score >= 0.5 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'
                         }`}>
                         {(score * 100).toFixed(1)}%
                       </span>

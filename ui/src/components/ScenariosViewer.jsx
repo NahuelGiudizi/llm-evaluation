@@ -347,15 +347,15 @@ function ScenarioCard({ scenario, isExpanded, onToggle }) {
                                         <div
                                             key={letter}
                                             className={`p-2 rounded-lg text-sm flex items-start gap-2 ${isCorrectChoice
-                                                    ? 'bg-success-bg border border-success/30'
-                                                    : isIncorrectChoice
-                                                        ? 'bg-error-bg border border-error/30'
-                                                        : 'bg-surface-active/30'
+                                                ? 'bg-success-bg border border-success/30'
+                                                : isIncorrectChoice
+                                                    ? 'bg-error-bg border border-error/30'
+                                                    : 'bg-surface-active/30'
                                                 }`}
                                         >
                                             <span className={`font-mono ${isCorrectChoice ? 'text-success' :
-                                                    isIncorrectChoice ? 'text-error' :
-                                                        'text-tertiary'
+                                                isIncorrectChoice ? 'text-error' :
+                                                    'text-tertiary'
                                                 }`}>
                                                 {letter})
                                             </span>

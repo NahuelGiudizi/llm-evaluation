@@ -206,7 +206,7 @@ function App() {
               <span>View on GitHub</span>
               <ExternalLink className="w-3 h-3" />
             </a>
-            
+
             <div className="flex items-center gap-2 text-xs text-secondary">
               <Sparkles className="w-3 h-3" />
               <span>llm-benchmark-toolkit</span>

@@ -11,9 +11,9 @@ This module provides tools for testing LLM security, safety, and robustness:
 All tools are designed to work with $0 cost using free libraries and local models.
 """
 
-from llm_evaluator.security.red_team import RedTeamBenchmark
-from llm_evaluator.security.prompt_injection import PromptInjectionBenchmark
 from llm_evaluator.security.pii_detector import PIIDetector
+from llm_evaluator.security.prompt_injection import PromptInjectionBenchmark
+from llm_evaluator.security.red_team import RedTeamBenchmark
 from llm_evaluator.security.toxicity import ToxicityDetector
 
 __all__ = [

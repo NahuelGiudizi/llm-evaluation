@@ -8,6 +8,10 @@ import logging
 from typing import Any, Dict, Optional, Union
 
 from ..providers import LLMProvider
+from ..security.prompt_injection import PromptInjectionBenchmark
+
+# Security benchmarks
+from ..security.red_team import RedTeamBenchmark
 from .arc import ARCBenchmark
 from .boolq import BoolQBenchmark
 from .commonsenseqa import CommonsenseQABenchmark
@@ -18,10 +22,6 @@ from .mmlu import MMLUBenchmark
 from .safetybench import SafetyBenchBenchmark
 from .truthfulqa import TruthfulQABenchmark
 from .winogrande import WinoGrandeBenchmark
-
-# Security benchmarks
-from ..security.red_team import RedTeamBenchmark
-from ..security.prompt_injection import PromptInjectionBenchmark
 
 logger = logging.getLogger(__name__)
 

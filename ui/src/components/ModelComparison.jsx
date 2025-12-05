@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import ReactDOM from 'react-dom'
 import {
   BarChart,
   Bar,
@@ -66,77 +67,121 @@ const benchmarkDescriptions = {
 // Custom tick component for XAxis with tooltip
 function CustomXAxisTick({ x, y, payload }) {
   const [showTooltip, setShowTooltip] = useState(false)
+  const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 })
+  const textRef = useRef(null)
   const description = benchmarkDescriptions[payload.value] || ''
 
+  const handleMouseEnter = (e) => {
+    if (textRef.current) {
+      const rect = textRef.current.getBoundingClientRect()
+      const scrollX = window.pageXOffset || document.documentElement.scrollLeft
+      const scrollY = window.pageYOffset || document.documentElement.scrollTop
+      setTooltipPos({
+        x: rect.left + scrollX,
+        y: rect.top + scrollY
+      })
+    }
+    setShowTooltip(true)
+  }
+
   return (
-    <g transform={`translate(${x},${y})`}>
-      <text
-        x={0}
-        y={0}
-        dy={16}
-        textAnchor="end"
-        fill="#94a3b8"
-        fontSize={12}
-        transform="rotate(-35)"
-        style={{ cursor: 'help' }}
-        onMouseEnter={() => setShowTooltip(true)}
-        onMouseLeave={() => setShowTooltip(false)}
-      >
-        {payload.value}
-      </text>
-      {showTooltip && description && (
-        <foreignObject x={-200} y={20} width={220} height={100} style={{ overflow: 'visible', zIndex: 9999 }}>
-          <div className="bg-background border border-default rounded-lg p-2 shadow-xl text-xs text-secondary z-[9999]">
-            <p className="font-semibold text-primary mb-1">{payload.value}</p>
-            <p>{description}</p>
-          </div>
-        </foreignObject>
+    <>
+      <g transform={`translate(${x},${y})`}>
+        <text
+          ref={textRef}
+          x={0}
+          y={0}
+          dy={16}
+          textAnchor="end"
+          fill="#94a3b8"
+          fontSize={12}
+          transform="rotate(-35)"
+          style={{ cursor: 'help' }}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={() => setShowTooltip(false)}
+        >
+          {payload.value}
+        </text>
+      </g>
+      {showTooltip && description && ReactDOM.createPortal(
+        <div
+          className="fixed bg-surface dark:bg-slate-800 border border-default rounded-xl p-3 shadow-2xl text-xs text-secondary leading-relaxed max-w-xs"
+          style={{
+            left: `${tooltipPos.x}px`,
+            top: `${tooltipPos.y}px`,
+            transform: 'translate(-50%, -120%)',
+            zIndex: 9999,
+            pointerEvents: 'none'
+          }}
+        >
+          <p className="font-semibold text-primary mb-1.5">{payload.value}</p>
+          <p>{description}</p>
+        </div>,
+        document.body
       )}
-    </g>
+    </>
   )
 }
 
 // Custom tick component for Radar chart labels with tooltip
 function CustomRadarTick({ payload, x, y, cx, cy, ...rest }) {
   const [showTooltip, setShowTooltip] = useState(false)
+  const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 })
+  const textRef = useRef(null)
   const description = benchmarkDescriptions[payload.value] || ''
 
   // Calculate text anchor based on position
   const textAnchor = x > cx ? 'start' : x < cx ? 'end' : 'middle'
   const dy = y > cy ? 10 : y < cy ? -5 : 0
 
+  const handleMouseEnter = (e) => {
+    if (textRef.current) {
+      const rect = textRef.current.getBoundingClientRect()
+      const scrollX = window.pageXOffset || document.documentElement.scrollLeft
+      const scrollY = window.pageYOffset || document.documentElement.scrollTop
+      setTooltipPos({
+        x: rect.left + scrollX + rect.width / 2,
+        y: rect.top + scrollY - 10
+      })
+    }
+    setShowTooltip(true)
+  }
+
   return (
-    <g>
+    <>
       <text
+        ref={textRef}
         {...rest}
         x={x}
         y={y}
         dy={dy}
         textAnchor={textAnchor}
-        fill="#e2e8f0"
-        fontSize={12}
-        fontWeight={500}
+        className="fill-slate-700 dark:fill-slate-200"
+        fontSize={14}
+        fontWeight={700}
         style={{ cursor: 'help' }}
-        onMouseEnter={() => setShowTooltip(true)}
+        onMouseEnter={handleMouseEnter}
         onMouseLeave={() => setShowTooltip(false)}
       >
         {payload.value}
       </text>
-      {showTooltip && description && (
-        <foreignObject
-          x={textAnchor === 'end' ? x - 230 : textAnchor === 'start' ? x + 10 : x - 110}
-          y={y - 30}
-          width={220}
-          height={80}
-          style={{ overflow: 'visible', zIndex: 9999 }}
+      {showTooltip && description && ReactDOM.createPortal(
+        <div
+          className="fixed bg-surface dark:bg-slate-800 border border-default rounded-xl p-3 shadow-2xl text-xs text-secondary leading-relaxed max-w-xs"
+          style={{
+            left: `${tooltipPos.x}px`,
+            top: `${tooltipPos.y}px`,
+            transform: 'translate(-50%, -100%)',
+            zIndex: 9999,
+            pointerEvents: 'none'
+          }}
         >
-          <div className="bg-background border border-default rounded-lg p-2 shadow-xl text-xs text-secondary z-[9999]">
-            <p className="font-semibold text-primary mb-1">{payload.value}</p>
-            <p>{description}</p>
-          </div>
-        </foreignObject>
+          <p className="font-semibold text-primary mb-1.5">{payload.value}</p>
+          <p>{description}</p>
+        </div>,
+        document.body
       )}
-    </g>
+    </>
   )
 }
 
@@ -147,7 +192,7 @@ function CustomTooltip({ active, payload, label }) {
   const description = benchmarkDescriptions[label] || ''
 
   return (
-    <div className="bg-surface border border-default rounded-lg p-3 shadow-xl max-w-xs z-[9999]">
+    <div className="bg-surface dark:bg-slate-800 border border-default rounded-xl p-4 shadow-2xl max-w-xs" style={{ zIndex: 9999 }}>
       <p className="font-semibold text-primary mb-1">{label}</p>
       {description && (
         <p className="text-xs text-tertiary mb-2">{description}</p>
@@ -431,13 +476,13 @@ function ModelComparison() {
                   <button
                     key={run.run_id}
                     onClick={() => toggleRunSelection(run.run_id)}
-                    className={`px-3 py-2 rounded-lg border text-sm transition-colors flex flex-col items-start ${selectedRuns.includes(run.run_id)
-                      ? 'bg-primary-500/20 border-primary-500/50 text-primary-400'
-                      : 'bg-surface border-default text-tertiary hover:border-default'
+                    className={`px-3 py-2 rounded-lg text-sm transition-all duration-200 flex flex-col items-start ${selectedRuns.includes(run.run_id)
+                      ? 'border-[2.5px] border-primary-500 bg-primary-500/20 text-primary-400 shadow-md shadow-primary-500/20 ring-2 ring-primary-500/10 scale-[1.02]'
+                      : 'border-2 border-default bg-surface text-tertiary hover:border-slate-400 dark:hover:border-slate-500 hover:bg-surface-hover'
                       }`}
                   >
                     <div className="flex items-center gap-2">
-                      <span className="font-medium">{run.model}</span>
+                      <span className={`font-medium transition-colors ${selectedRuns.includes(run.run_id) ? 'text-primary-600 dark:text-primary-300' : ''}`}>{run.model}</span>
                       <span className="text-xs opacity-60 font-mono">#{runIdShort}</span>
                       {inferenceTag && (
                         <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400">{inferenceTag}</span>
@@ -526,7 +571,12 @@ function ModelComparison() {
                       interval={0}
                     />
                     <YAxis tick={{ fill: getCSSColor('--chart-text') }} domain={[0, 100]} />
-                    <Tooltip content={<CustomTooltip />} />
+                    <Tooltip
+                      content={<CustomTooltip />}
+                      wrapperStyle={{ zIndex: 1000, pointerEvents: 'none' }}
+                      cursor={{ fill: 'rgba(0, 0, 0, 0.05)' }}
+                      allowEscapeViewBox={{ x: true, y: true }}
+                    />
                     <Legend
                       wrapperStyle={{ paddingTop: 20, cursor: 'pointer' }}
                       onClick={(e) => {
@@ -556,7 +606,7 @@ function ModelComparison() {
                   <ResponsiveContainer width="100%" height={500}>
                     <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="70%">
                       <PolarGrid
-                        stroke="#334155"
+                        stroke={getCSSColor('--chart-grid')}
                         strokeWidth={1}
                         gridType="polygon"
                       />
@@ -568,7 +618,7 @@ function ModelComparison() {
                       <PolarRadiusAxis
                         angle={90}
                         domain={[0, 100]}
-                        tick={{ fill: '#64748b', fontSize: 10 }}
+                        tick={{ fill: getCSSColor('--chart-text'), fontSize: 10 }}
                         tickCount={5}
                         axisLine={false}
                       />
@@ -583,14 +633,19 @@ function ModelComparison() {
                             stroke={colors[i % colors.length]}
                             strokeWidth={isHighlighted ? 3 : 1}
                             fill={colors[i % colors.length]}
-                            fillOpacity={isHighlighted ? 0.6 : 0.1}
+                            fillOpacity={isHighlighted ? 0.5 : 0.08}
                             dot={false}
                             activeDot={false}
                             isAnimationActive={false}
                           />
                         )
                       })}
-                      <Tooltip content={<CustomTooltip />} />
+                      <Tooltip
+                        content={<CustomTooltip />}
+                        wrapperStyle={{ zIndex: 1000, pointerEvents: 'none' }}
+                        cursor={false}
+                        allowEscapeViewBox={{ x: true, y: true }}
+                      />
                       <Legend
                         wrapperStyle={{
                           paddingTop: 20,

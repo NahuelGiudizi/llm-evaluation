@@ -303,9 +303,7 @@ class EvaluationRunner:
                             elif "Red Team" in line or "RedTeam" in line:
                                 current_benchmark = "redteam"
                                 bench_idx = (
-                                    benchmarks.index("redteam")
-                                    if "redteam" in benchmarks
-                                    else 0
+                                    benchmarks.index("redteam") if "redteam" in benchmarks else 0
                                 )
                             elif "Prompt Injection" in line or "PromptInjection" in line:
                                 current_benchmark = "prompt_injection"

@@ -143,18 +143,27 @@ function ProgressViewer({ activeRun }) {
   }, [currentQueueRun?.logs, autoScrollQueueLogs])
 
   useEffect(() => {
-    if (!activeRun) {
+    // Determine which run to show
+    // Priority: running queue item > activeRun
+    const runningQueueItem = queueStatus?.items?.find(i => i.status === 'running')
+    const effectiveActiveRun = runningQueueItem?.run_id || activeRun
+
+    if (!effectiveActiveRun) {
       setStatus('no-run')
+      setRun(null)
       return
     }
 
     setStatus('connecting')
-    setRun(null)
+    if (runningQueueItem?.run_id && runningQueueItem.run_id !== activeRun) {
+      // Clear old run data when switching to queue run
+      setRun(null)
+    }
 
     // Poll for updates every 2 seconds
     const pollRun = async () => {
       try {
-        const data = await fetchRun(activeRun)
+        const data = await fetchRun(effectiveActiveRun)
         setRun(data)
 
         if (data.status === 'running') {
@@ -196,7 +205,7 @@ function ProgressViewer({ activeRun }) {
         clearInterval(pollIntervalRef.current)
       }
     }
-  }, [activeRun])
+  }, [activeRun, queueStatus?.items])
 
   useEffect(() => {
     if (autoScrollLogs && logsEndRef.current) {
@@ -475,16 +484,16 @@ function ProgressViewer({ activeRun }) {
                 </p>
               </div>
             </div>
-            
+
             {/* Extract progress from current run logs */}
             {(() => {
               const logs = currentQueueRun.logs?.map(l => typeof l === 'object' ? l.message : l) || []
               let currentBenchmark = null
               let progressPercent = 0
               let accuracy = null
-              
+
               const benchmarkPattern = /(MMLU|TruthfulQA|HellaSwag|ARC|WinoGrande|CommonsenseQA|BoolQ|SafetyBench|Do-Not-Answer|DONOTANSWER)/i
-              
+
               // Find current benchmark
               for (let i = logs.length - 1; i >= 0; i--) {
                 const line = logs[i]
@@ -496,7 +505,7 @@ function ProgressViewer({ activeRun }) {
                   }
                 }
               }
-              
+
               // Find latest progress
               for (let i = logs.length - 1; i >= 0; i--) {
                 const line = logs[i]
@@ -508,7 +517,7 @@ function ProgressViewer({ activeRun }) {
                   break
                 }
               }
-              
+
               return currentBenchmark && (
                 <div className="mt-3">
                   <div className="flex justify-between text-xs text-tertiary mb-2">

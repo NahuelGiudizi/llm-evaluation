@@ -12,44 +12,69 @@
   /* Clean, professional, high contrast */
 
   /* Backgrounds */
-  --bg-base: 248 250 252;           /* slate-50 - Main app background */
-  --bg-surface: 255 255 255;        /* white - Cards, panels */
-  --bg-surface-hover: 249 250 251;  /* slate-50 - Hover states */
-  --bg-surface-active: 241 245 249; /* slate-100 - Active/selected */
-  
+  --bg-base: 248 250 252;
+  /* slate-50 - Main app background */
+  --bg-surface: 255 255 255;
+  /* white - Cards, panels */
+  --bg-surface-hover: 249 250 251;
+  /* slate-50 - Hover states */
+  --bg-surface-active: 241 245 249;
+  /* slate-100 - Active/selected */
+
   /* Text */
-  --text-primary: 15 23 42;         /* slate-900 - Headings, primary */
-  --text-secondary: 51 65 85;       /* slate-700 - Body text */
-  --text-tertiary: 100 116 139;     /* slate-500 - Muted text */
-  --text-inverse: 255 255 255;      /* white - Text on dark bg */
-  
+  --text-primary: 15 23 42;
+  /* slate-900 - Headings, primary */
+  --text-secondary: 51 65 85;
+  /* slate-700 - Body text */
+  --text-tertiary: 100 116 139;
+  /* slate-500 - Muted text */
+  --text-inverse: 255 255 255;
+  /* white - Text on dark bg */
+
   /* Borders */
-  --border-default: 226 232 240;    /* slate-200 */
-  --border-hover: 203 213 225;      /* slate-300 */
-  --border-subtle: 241 245 249;     /* slate-100 */
-  
+  --border-default: 226 232 240;
+  /* slate-200 */
+  --border-hover: 203 213 225;
+  /* slate-300 */
+  --border-subtle: 241 245 249;
+  /* slate-100 */
+
   /* Interactive - Blue */
-  --interactive-base: 59 130 246;   /* blue-500 */
-  --interactive-hover: 37 99 235;   /* blue-600 */
-  --interactive-active: 29 78 216;  /* blue-700 */
-  --interactive-bg: 239 246 255;    /* blue-50 */
-  
+  --interactive-base: 59 130 246;
+  /* blue-500 */
+  --interactive-hover: 37 99 235;
+  /* blue-600 */
+  --interactive-active: 29 78 216;
+  /* blue-700 */
+  --interactive-bg: 239 246 255;
+  /* blue-50 */
+
   /* Accent - Amber/Orange (logo color) */
-  --accent-base: 245 158 11;        /* amber-500 */
-  --accent-hover: 217 119 6;        /* amber-600 */
-  
+  --accent-base: 245 158 11;
+  /* amber-500 */
+  --accent-hover: 217 119 6;
+  /* amber-600 */
+
   /* Status colors */
-  --status-success: 34 197 94;      /* green-500 */
-  --status-success-bg: 240 253 244; /* green-50 */
-  --status-warning: 234 179 8;      /* yellow-500 */
-  --status-warning-bg: 254 252 232; /* yellow-50 */
-  --status-error: 239 68 68;        /* red-500 */
-  --status-error-bg: 254 242 242;   /* red-50 */
-  
+  --status-success: 34 197 94;
+  /* green-500 */
+  --status-success-bg: 240 253 244;
+  /* green-50 */
+  --status-warning: 234 179 8;
+  /* yellow-500 */
+  --status-warning-bg: 254 252 232;
+  /* yellow-50 */
+  --status-error: 239 68 68;
+  /* red-500 */
+  --status-error-bg: 254 242 242;
+  /* red-50 */
+
   /* Chart colors */
-  --chart-grid: 226 232 240;        /* slate-200 */
-  --chart-text: 100 116 139;        /* slate-500 */
-  
+  --chart-grid: 226 232 240;
+  /* slate-200 */
+  --chart-text: 100 116 139;
+  /* slate-500 */
+
   /* Shadows */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
@@ -60,46 +85,71 @@
 .dark {
   /* ===== DARK MODE ===== */
   /* Sophisticated, elegant, proper contrast */
-  
+
   /* Backgrounds */
-  --bg-base: 15 23 42;              /* slate-900 - Main app background */
-  --bg-surface: 30 41 59;           /* slate-800 - Cards, panels */
-  --bg-surface-hover: 51 65 85;     /* slate-700 - Hover states */
-  --bg-surface-active: 71 85 105;   /* slate-600 - Active/selected */
-  
+  --bg-base: 15 23 42;
+  /* slate-900 - Main app background */
+  --bg-surface: 30 41 59;
+  /* slate-800 - Cards, panels */
+  --bg-surface-hover: 51 65 85;
+  /* slate-700 - Hover states */
+  --bg-surface-active: 71 85 105;
+  /* slate-600 - Active/selected */
+
   /* Text */
-  --text-primary: 248 250 252;      /* slate-50 - Headings, primary */
-  --text-secondary: 226 232 240;    /* slate-200 - Body text */
-  --text-tertiary: 148 163 184;     /* slate-400 - Muted text */
-  --text-inverse: 15 23 42;         /* slate-900 - Text on light bg */
-  
+  --text-primary: 248 250 252;
+  /* slate-50 - Headings, primary */
+  --text-secondary: 226 232 240;
+  /* slate-200 - Body text */
+  --text-tertiary: 148 163 184;
+  /* slate-400 - Muted text */
+  --text-inverse: 15 23 42;
+  /* slate-900 - Text on light bg */
+
   /* Borders */
-  --border-default: 51 65 85;       /* slate-700 */
-  --border-hover: 71 85 105;        /* slate-600 */
-  --border-subtle: 30 41 59;        /* slate-800 */
-  
+  --border-default: 51 65 85;
+  /* slate-700 */
+  --border-hover: 71 85 105;
+  /* slate-600 */
+  --border-subtle: 30 41 59;
+  /* slate-800 */
+
   /* Interactive - Lighter blue for dark bg */
-  --interactive-base: 96 165 250;   /* blue-400 */
-  --interactive-hover: 59 130 246;  /* blue-500 */
-  --interactive-active: 37 99 235;  /* blue-600 */
-  --interactive-bg: 30 58 138;      /* blue-900 */
-  
+  --interactive-base: 96 165 250;
+  /* blue-400 */
+  --interactive-hover: 59 130 246;
+  /* blue-500 */
+  --interactive-active: 37 99 235;
+  /* blue-600 */
+  --interactive-bg: 30 58 138;
+  /* blue-900 */
+
   /* Accent - Lighter amber for dark bg */
-  --accent-base: 251 191 36;        /* amber-400 */
-  --accent-hover: 245 158 11;       /* amber-500 */
-  
+  --accent-base: 251 191 36;
+  /* amber-400 */
+  --accent-hover: 245 158 11;
+  /* amber-500 */
+
   /* Status colors - Adjusted for dark */
-  --status-success: 74 222 128;     /* green-400 */
-  --status-success-bg: 20 83 45;    /* green-900 */
-  --status-warning: 250 204 21;     /* yellow-400 */
-  --status-warning-bg: 113 63 18;   /* yellow-900 */
-  --status-error: 248 113 113;      /* red-400 */
-  --status-error-bg: 127 29 29;     /* red-900 */
-  
+  --status-success: 74 222 128;
+  /* green-400 */
+  --status-success-bg: 20 83 45;
+  /* green-900 */
+  --status-warning: 250 204 21;
+  /* yellow-400 */
+  --status-warning-bg: 113 63 18;
+  /* yellow-900 */
+  --status-error: 248 113 113;
+  /* red-400 */
+  --status-error-bg: 127 29 29;
+  /* red-900 */
+
   /* Chart colors */
-  --chart-grid: 51 65 85;           /* slate-700 */
-  --chart-text: 148 163 184;        /* slate-400 */
-  
+  --chart-grid: 51 65 85;
+  /* slate-700 */
+  --chart-text: 148 163 184;
+  /* slate-400 */
+
   /* Shadows - Darker in dark mode */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4);
@@ -164,6 +214,7 @@
 
 /* ===== BUTTON COMPONENTS ===== */
 @layer components {
+
   /* Base button styles */
   .btn {
     @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-all duration-200;

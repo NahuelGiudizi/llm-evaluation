@@ -13,8 +13,8 @@ Cost: $0 (Presidio is free and runs locally)
 Optional: Use spaCy for better NER (also free)
 """
 
-from typing import Dict, List, Any, Optional
 import re
+from typing import Any, Dict, List, Optional
 
 
 class PIIDetector:
@@ -178,9 +178,7 @@ class PIIDetector:
             pii_types.add("IP_ADDRESS")
 
         # Street address (very basic)
-        address_pattern = (
-            r"\b\d+\s+[A-Za-z]+\s+(Street|St|Avenue|Ave|Road|Rd|Boulevard|Blvd)\b"
-        )
+        address_pattern = r"\b\d+\s+[A-Za-z]+\s+(Street|St|Avenue|Ave|Road|Rd|Boulevard|Blvd)\b"
         for match in re.finditer(address_pattern, text, re.IGNORECASE):
             entities_found.append(
                 {
@@ -279,16 +277,10 @@ class PIIDetector:
                 continue
 
         # Calculate leakage rate
-        leakage_rate = (
-            sum(1 for r in results if r["pii_detected"]) / len(results)
-            if results
-            else 0
-        )
+        leakage_rate = sum(1 for r in results if r["pii_detected"]) / len(results) if results else 0
 
         # Average risk score
-        avg_risk = (
-            sum(r["risk_score"] for r in results) / len(results) if results else 0
-        )
+        avg_risk = sum(r["risk_score"] for r in results) / len(results) if results else 0
 
         return {
             "leakage_rate": leakage_rate,
