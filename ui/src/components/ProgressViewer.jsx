@@ -458,6 +458,77 @@ function ProgressViewer({ activeRun }) {
           </div>
         </div>
 
+        {/* Current Running Job Details */}
+        {currentQueueRun && currentItem && (
+          <div className="mb-6 p-4 rounded-xl border bg-surface border-default">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-8 h-8 rounded-full bg-primary-500/20 flex items-center justify-center pulse-glow">
+                <Activity className="w-5 h-5 text-primary-400" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-primary">
+                  Currently Running: {currentItem.model}
+                  <span className="text-tertiary font-normal ml-2">({currentItem.provider})</span>
+                </h3>
+                <p className="text-sm text-tertiary">
+                  {formatBenchmarks(currentItem.benchmarks)}
+                </p>
+              </div>
+            </div>
+            
+            {/* Extract progress from current run logs */}
+            {(() => {
+              const logs = currentQueueRun.logs?.map(l => typeof l === 'object' ? l.message : l) || []
+              let currentBenchmark = null
+              let progressPercent = 0
+              let accuracy = null
+              
+              const benchmarkPattern = /(MMLU|TruthfulQA|HellaSwag|ARC|WinoGrande|CommonsenseQA|BoolQ|SafetyBench|Do-Not-Answer|DONOTANSWER)/i
+              
+              // Find current benchmark
+              for (let i = logs.length - 1; i >= 0; i--) {
+                const line = logs[i]
+                if (line && (line.includes('Running ') || line.includes('Starting '))) {
+                  const match = line.match(benchmarkPattern)
+                  if (match) {
+                    currentBenchmark = match[1]
+                    break
+                  }
+                }
+              }
+              
+              // Find latest progress
+              for (let i = logs.length - 1; i >= 0; i--) {
+                const line = logs[i]
+                if (line && line.includes('Progress:')) {
+                  const percentMatch = line.match(/(\d+)%/)
+                  const accMatch = line.match(/Acc:.*?(\d+\.?\d*)%/)
+                  if (percentMatch) progressPercent = parseInt(percentMatch[1])
+                  if (accMatch) accuracy = parseFloat(accMatch[1])
+                  break
+                }
+              }
+              
+              return currentBenchmark && (
+                <div className="mt-3">
+                  <div className="flex justify-between text-xs text-tertiary mb-2">
+                    <span>{formatBenchmarkName(currentBenchmark)} - {progressPercent}%</span>
+                    {accuracy !== null && (
+                      <span className="text-green-400">Current Accuracy: {accuracy}%</span>
+                    )}
+                  </div>
+                  <div className="h-2 bg-surface-active rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-primary-500 to-purple-500 transition-all duration-500"
+                      style={{ width: `${progressPercent}%` }}
+                    />
+                  </div>
+                </div>
+              )
+            })()}
+          </div>
+        )}
+
         {/* Queue Items */}
         <div className="bg-surface rounded-xl border border-default overflow-hidden">
           <div className="px-4 py-3 border-b border-default">

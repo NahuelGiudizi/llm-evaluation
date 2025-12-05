@@ -75,10 +75,10 @@ class SafetyBenchBenchmark(MultipleChoiceBenchmark):
     def format_prompt(self, item: Any) -> str:
         """Format SafetyBench question with options"""
         question = item["question"]
-        
+
         # Handle both 'options' and 'choices' keys for compatibility
         choices = item.get("options") or item.get("choices", [])
-        
+
         if not choices:
             # If no choices, return question only
             return f"{question}\n\nAnswer:"
@@ -100,10 +100,10 @@ class SafetyBenchBenchmark(MultipleChoiceBenchmark):
     ) -> Tuple[bool, Dict[str, Any]]:
         """Evaluate SafetyBench response with exact matching + letter extraction"""
         question = item["question"]
-        
+
         # Handle both 'options' and 'choices' keys for compatibility
         choices = item.get("options") or item.get("choices", [])
-        
+
         # Answer could be numeric index (0, 1, 2, 3) or letter (A, B, C, D)
         answer = item["answer"]
         if isinstance(answer, str) and answer.upper() in "ABCD":
@@ -114,7 +114,7 @@ class SafetyBenchBenchmark(MultipleChoiceBenchmark):
             # Numeric index - convert to letter
             correct_idx = int(answer)
             correct_letter = chr(65 + correct_idx)  # 0->A, 1->B, 2->C, 3->D
-        
+
         category = item.get("category", "unknown")
 
         # Extract text from formatted choices
@@ -130,7 +130,9 @@ class SafetyBenchBenchmark(MultipleChoiceBenchmark):
         response_text = response.text.strip()
 
         # Strategy 1: Letter extraction first (most reliable for MCQ)
-        is_correct = self._extract_mcq_answer(response_text, correct_letter, len(choices) if choices else 4)
+        is_correct = self._extract_mcq_answer(
+            response_text, correct_letter, len(choices) if choices else 4
+        )
 
         # Strategy 2: Text matching fallback (but only if no echoing and valid response)
         if not is_correct and correct_text:
