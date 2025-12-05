@@ -23,7 +23,8 @@ import {
   BookOpen,
   Sparkles,
   AlertTriangle,
-  Hash
+  Hash,
+  Check
 } from 'lucide-react'
 import { fetchModels, fetchBenchmarks, fetchPresets, startRun, fetchModelInfo } from '../api'
 import QueueBuilder from './QueueBuilder'
@@ -621,11 +622,15 @@ function RunManager({ onRunStart }) {
                         <span className="text-lg">{icons[benchmark.id] || '📋'}</span>
                         <span className={`font-medium transition-colors ${isSelected ? 'text-primary-600 dark:text-primary-400' : 'text-primary'}`}>{benchmark.name}</span>
                       </div>
-                      {isSelected && (
-                        <div className="w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200 border-primary-500 bg-primary-500 shadow-md shadow-primary-500/30">
-                          <CheckCircle className="w-4 h-4 text-white" />
-                        </div>
-                      )}
+                      <div className={`
+                        w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200
+                        ${isSelected
+                          ? 'border-primary-500 bg-primary-500 shadow-md shadow-primary-500/30'
+                          : 'border-default'
+                        }
+                      `}>
+                        {isSelected && <Check className="w-4 h-4 text-white font-bold" />}
+                      </div>
                     </div>
                     <p className="text-xs text-tertiary mt-1.5">
                       {descriptions[benchmark.id] || benchmark.description}
@@ -689,13 +694,13 @@ function RunManager({ onRunStart }) {
                         <span className="font-medium text-primary">{benchmark.name}</span>
                       </div>
                       <div className={`
-                        w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all
+                        w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200
                         ${isSelected
-                          ? 'border-emerald-500 bg-emerald-500'
+                          ? 'border-emerald-500 bg-emerald-500 shadow-md shadow-emerald-500/30'
                           : 'border-default'
                         }
                       `}>
-                        {isSelected && <CheckCircle className="w-3 h-3 text-primary" />}
+                        {isSelected && <Check className="w-4 h-4 text-white font-bold" />}
                       </div>
                     </div>
                     <p className="text-xs text-tertiary mt-1.5">

@@ -43,7 +43,7 @@ Documentation: docs/
 Repository: https://github.com/NahuelGiudizi/llm-evaluation
 """
 
-__version__ = "2.4.0"
+__version__ = "2.4.1"
 __author__ = "Nahuel Giudizi"
 __license__ = "MIT"
 
